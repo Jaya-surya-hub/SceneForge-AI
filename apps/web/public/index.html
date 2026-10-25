@@ -1294,7 +1294,7 @@
           <div class="form-group">
             <div class="form-label">
               <span>Target Aspect Ratio</span>
-              <span class="highlight" id="ratioLabel">16:9 Landscape (1920×1080)</span>
+              <span class="highlight" id="ratioLabel">16:9 Landscape (1280×720)</span>
             </div>
             <div class="pill-group">
               <div>
@@ -1305,7 +1305,7 @@
                   </svg>
                   <div class="pill-label-text">
                     <span class="pill-label-title">16:9 Landscape</span>
-                    <span class="pill-label-sub">1920×1080 Standard</span>
+                    <span class="pill-label-sub">1280×720 Standard</span>
                   </div>
                 </label>
               </div>
@@ -1317,7 +1317,7 @@
                   </svg>
                   <div class="pill-label-text">
                     <span class="pill-label-title">9:16 Portrait</span>
-                    <span class="pill-label-sub">1080×1920 Shorts / Reels</span>
+                    <span class="pill-label-sub">720×1280 Shorts / Reels</span>
                   </div>
                 </label>
               </div>
@@ -1409,12 +1409,20 @@
         <div class="card stepper-card" id="stepperCard">
           <div class="job-id-banner">
             <div>JOB ID: <strong id="stepperJobId">—</strong></div>
-            <button type="button" id="copyJobIdBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-              </svg>
-              Copy ID
-            </button>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <button type="button" id="copyJobIdBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+                Copy ID
+              </button>
+              <button type="button" id="cancelJobBtn" style="border:1px solid var(--border);background:#ffffff;color:var(--danger);font-size:0.75rem;padding:0.25rem 0.6rem;border-radius:var(--radius-sm);font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:0.25rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;">
+                  <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                Cancel / Reset
+              </button>
+            </div>
           </div>
 
           <div class="pipeline-stepper">
@@ -1506,7 +1514,7 @@
           <!-- Video Actions -->
           <div class="video-actions" id="videoActions" style="display:none;">
             <div style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);" id="videoMetaText">
-              H.264 / AAC • 1920×1080 @ 30 FPS
+              H.264 / AAC • 1280×720 @ 24 FPS
             </div>
             <a href="#" class="btn-download" id="downloadMp4Btn" download="sceneforge_video.mp4">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1569,8 +1577,8 @@
                 <tr><th>Container Format</th><td>MP4 (ISO Base Media)</td></tr>
                 <tr><th>Video Codec</th><td>H.264 (libx264 high profile)</td></tr>
                 <tr><th>Audio Stream</th><td>AAC-LC 44.1kHz Stereo (128 kbps)</td></tr>
-                <tr><th>Frame Rate</th><td>30.000 FPS</td></tr>
-                <tr><th>Dimensions</th><td id="specResolution">1920×1080 (16:9)</td></tr>
+                <tr><th>Frame Rate</th><td>24.000 FPS</td></tr>
+                <tr><th>Dimensions</th><td id="specResolution">1280×720 (16:9)</td></tr>
                 <tr><th>Automated QA</th><td id="specQA">Pending job execution</td></tr>
               </tbody>
             </table>
@@ -1736,8 +1744,8 @@
     // Aspect ratio label update
     document.querySelectorAll('input[name="aspectRatio"]').forEach(el => {
       el.addEventListener('change', () => {
-        document.getElementById('ratioLabel').innerText = el.value === '16:9' ? '16:9 Landscape (1920×1080)' : '9:16 Portrait (1080×1920)';
-        document.getElementById('specResolution').innerText = el.value === '16:9' ? '1920×1080 (16:9)' : '1080×1920 (9:16)';
+        document.getElementById('ratioLabel').innerText = el.value === '16:9' ? '16:9 Landscape (1280×720)' : '9:16 Portrait (720×1280)';
+        document.getElementById('specResolution').innerText = el.value === '16:9' ? '1280×720 (16:9)' : '720×1280 (9:16)';
       });
     });
 
@@ -1879,6 +1887,29 @@
       }
     });
 
+    const cancelJobBtn = document.getElementById('cancelJobBtn');
+    if (cancelJobBtn) {
+      cancelJobBtn.addEventListener('click', async () => {
+        if (pollInterval) clearInterval(pollInterval);
+        const jId = currentJobId || (stepperJobId ? stepperJobId.innerText : '');
+        if (jId && jId !== '—') {
+          try {
+            await fetch(`${API_BASE}/jobs/${jId}/cancel`, { method: 'POST' });
+          } catch (e) {
+            console.warn('Cancel API error:', e);
+          }
+        }
+        stepperCard.classList.remove('visible');
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="6 3 20 12 6 21 6 3"/>
+          </svg>
+          Generate B-Roll Video`;
+        showToast('Reset. Ready to create a new video');
+      });
+    }
+
     // Drawer Controls
     historyBtn.addEventListener('click', () => {
       drawerOverlay.classList.add('open');
@@ -2012,6 +2043,17 @@
           stepperStatusMsg.innerText = `Job failed: ${job.error_message || 'Rendering error'}`;
           stepperStatusMsg.className = 'stepper-status-text failed';
           showToast('Job Failed: ' + (job.error_message || 'Unknown error'));
+        } else if (job.status === 'CANCELLED') {
+          clearInterval(pollInterval);
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+            Generate B-Roll Video`;
+          stepperStatusMsg.innerText = 'Job was cancelled.';
+          stepperStatusMsg.className = 'stepper-status-text';
+          showToast('Job cancelled');
         }
       } catch (err) {
         console.warn('Polling error:', err);
