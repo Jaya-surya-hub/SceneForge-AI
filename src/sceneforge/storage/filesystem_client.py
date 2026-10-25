@@ -22,7 +22,15 @@ from sceneforge.observability.logging import get_logger
 
 log = get_logger(__name__)
 
-_STORAGE_ROOT = os.getenv("STORAGE_ROOT", "/tmp/sceneforge_storage")
+def _get_default_storage_root() -> str:
+    env_root = os.getenv("STORAGE_ROOT")
+    if env_root:
+        return env_root
+    if os.path.isdir("/app/storage"):
+        return "/app/storage"
+    return "/tmp/sceneforge_storage"
+
+_STORAGE_ROOT = _get_default_storage_root()
 
 
 class FilesystemStorageClient:

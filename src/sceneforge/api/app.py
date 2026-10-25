@@ -48,6 +48,17 @@ async def lifespan(app: FastAPI):
         except Exception as exc:
             log.warning("storage_bucket_init_skipped", reason=str(exc))
 
+        # Reconcile any orphaned/stuck jobs left in active states by worker crashes or restarts
+        try:
+            from sceneforge.jobs.database import get_session
+            from sceneforge.jobs.reconciler import reconcile_stale_jobs
+            with get_session() as session:
+                reconciled = reconcile_stale_jobs(session, stale_threshold_minutes=5)
+                if reconciled:
+                    log.warning("startup_reconciled_stale_jobs", count=reconciled)
+        except Exception as exc:
+            log.warning("startup_reconcile_stale_jobs_skipped", reason=str(exc))
+
     yield
 
     log.info("sceneforge_shutdown")

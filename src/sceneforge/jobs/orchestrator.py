@@ -846,11 +846,14 @@ class PipelineOrchestrator:
                         ffmpeg_called=result.ffmpeg_called,
                     )
                 except RenderError as exc:
-                    log.warning("render_error_fallback", job_id=jid, error=str(exc))
-                    mp4_bytes = self._placeholder_mp4_bytes()
-                    srt_content = ""
+                    log.error("stage_render_failed", job_id=jid, error=str(exc))
                     self._stage_render_metadata["render_error"] = str(exc)
-                    self._stage_render_metadata["used_placeholder"] = True
+                    self._fail(
+                        "RENDER_FAILED",
+                        f"Video rendering failed in FFmpeg: {exc}",
+                        retryable=True,
+                    )
+                    raise
             else:
                 # FFmpeg not available locally — write placeholder
                 mp4_bytes = self._placeholder_mp4_bytes()

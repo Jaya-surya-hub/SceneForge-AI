@@ -135,6 +135,7 @@ async def create_job(
         "sceneforge.jobs.worker.run_pipeline",
         str(job.id),
         job_timeout=int(os.getenv("JOB_TIMEOUT", "3600")),
+        on_failure="sceneforge.jobs.worker.on_pipeline_failure",
     )
 
     links = {
@@ -659,6 +660,7 @@ async def trigger_render(
         "sceneforge.jobs.worker.run_pipeline",
         str(job.id),
         job_timeout=int(os.getenv("JOB_TIMEOUT", "3600")),
+        on_failure="sceneforge.jobs.worker.on_pipeline_failure",
     )
 
     db.expire(job)

@@ -26,11 +26,15 @@ def find_stale_jobs(
     stale_threshold_minutes: int = 30,
 ) -> list[Job]:
     """Find jobs in ACTIVE_STATES whose last update is older than the threshold."""
+    active_values = [s.value if hasattr(s, "value") else str(s) for s in ACTIVE_STATES]
+    if stale_threshold_minutes <= 0:
+        stmt = select(Job).where(Job.status.in_(active_values))
+        return list(session.scalars(stmt))
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=stale_threshold_minutes)
     stmt = (
         select(Job)
         .where(
-            Job.status.in_([s.value if hasattr(s, "value") else str(s) for s in ACTIVE_STATES]),
+            Job.status.in_(active_values),
             Job.updated_at < cutoff,
         )
     )
@@ -67,5 +71,8 @@ def reconcile_stale_jobs(
             retry_count=job.retry_count,
             retryable=is_retryable,
         )
+
+    if count:
+        session.flush()
 
     return count
