@@ -1,31 +1,24 @@
-"""Media downloader and validator for stock and external video assets.
 
-Responsibilities:
-1. Download video assets from provider URLs (Pexels, Pixabay, or generic HTTP/HTTPS).
-2. Validate HTTP response, content size, and MIME type.
-3. Validate media stream via FFprobe (video stream presence, codec, duration, resolution).
-4. Compute cryptographic SHA-256 content hash.
-5. Persist validated video files to the configured storage backend (e.g. MinIO/filesystem).
-6. Provide deterministic mock video synthesis (with genuine moving footage) for no-key testing.
-7. Reject empty, corrupt, truncated, or invalid video files with typed ProviderErrors.
-"""
+"""Media downloader and validator for stock and external video assets."""
 
 from __future__ import annotations
 
 import hashlib
 import os
-import shutil
 import subprocess
 import tempfile
 import time
 import urllib.error
-import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from typing import Optional
 
 from sceneforge.observability.logging import get_logger
-from sceneforge.rendering.ffprobe import is_ffmpeg_available, is_ffprobe_available, probe_file
+from sceneforge.rendering.ffprobe import (
+    is_ffmpeg_available,
+    is_ffprobe_available,
+    probe_file,
+)
 from sceneforge.retrieval.interfaces import (
     MediaAsset,
     MediaDownloadError,
@@ -38,12 +31,13 @@ log = get_logger(__name__)
 
 _DEFAULT_DOWNLOAD_TIMEOUT = int(os.getenv("MEDIA_DOWNLOAD_TIMEOUT", "30"))
 _DEFAULT_MAX_RETRIES = int(os.getenv("MEDIA_DOWNLOAD_MAX_RETRIES", "2"))
-_MIN_VIDEO_FILE_SIZE = int(os.getenv("MEDIA_MIN_FILE_SIZE", "1024"))  # 1 KB
+_MOCK_VIDEO_TIMEOUT = int(os.getenv("MOCK_VIDEO_TIMEOUT", "60"))
+_MIN_VIDEO_FILE_SIZE = int(os.getenv("MEDIA_MIN_FILE_SIZE", "1024"))
 
 
 @dataclass
 class DownloadedMedia:
-    """Represents a validated, downloaded media asset ready for timeline rendering."""
+    """A validated media asset ready for timeline rendering."""
 
     asset_id: str
     local_path: str
@@ -81,35 +75,31 @@ class MediaDownloader:
         target_duration: Optional[float] = None,
         job_id: str = "unknown",
     ) -> DownloadedMedia:
-        """Download *asset* and validate its video stream and file integrity.
-
-        Args:
-            asset: The MediaAsset returned by a provider search.
-            target_duration: Planned duration in seconds (for duration check).
-            job_id: Job identifier for logging and storage namespacing.
-
-        Returns:
-            DownloadedMedia with verified file paths, hashes, and stream metadata.
-
-        Raises:
-            MediaDownloadError: On network, HTTP, or timeout failures.
-            MediaValidationError: If the file is corrupt, empty, or lacks video.
-        """
+        """Download or synthesize a video, validate it, and store it."""
         dest_dir = self._work_dir or tempfile.gettempdir()
         os.makedirs(dest_dir, exist_ok=True)
-        local_target = os.path.join(dest_dir, f"asset_{asset.asset_id.replace('/', '_')}.mp4")
 
-        # ── Step 1: Obtain raw video bytes (network download or mock synthesis) ──
-        if asset.is_mock or not asset.provider_asset_url or "mock.example" in asset.provider_asset_url:
-            self._generate_mock_motion_video(asset, local_target, target_duration or 10.0, job_id)
+        safe_asset_id = asset.asset_id.replace("/", "_").replace("\\", "_")
+        local_target = os.path.join(dest_dir, f"asset_{safe_asset_id}.mp4")
+
+        if (
+            asset.is_mock
+            or not asset.provider_asset_url
+            or "mock.example" in asset.provider_asset_url
+        ):
+            self._generate_mock_motion_video(
+                asset, local_target, target_duration or 10.0, job_id
+            )
         else:
             self._download_http(asset.provider_asset_url, local_target, job_id)
 
-        # ── Step 2: Validate file size ─────────────────────────────────────────
         try:
             size_bytes = os.path.getsize(local_target)
         except OSError as exc:
-            raise MediaDownloadError(f"Cannot read downloaded file {local_target}: {exc}", provider=asset.provider_name)
+            raise MediaDownloadError(
+                f"Cannot read downloaded file {local_target}: {exc}",
+                provider=asset.provider_name,
+            ) from exc
 
         if size_bytes < _MIN_VIDEO_FILE_SIZE:
             try:
@@ -117,14 +107,13 @@ class MediaDownloader:
             except OSError:
                 pass
             raise MediaValidationError(
-                f"Downloaded file for asset {asset.asset_id} is too small ({size_bytes} bytes).",
+                f"Downloaded file for asset {asset.asset_id} is too small "
+                f"({size_bytes} bytes).",
                 provider=asset.provider_name,
             )
 
-        # ── Step 3: Compute SHA-256 hash ───────────────────────────────────────
         sha256_hash = self._compute_file_sha256(local_target)
 
-        # ── Step 4: Validate with FFprobe (stream, codec, duration) ────────────
         duration = 5.0
         width = asset.width or 1920
         height = asset.height or 1080
@@ -134,48 +123,58 @@ class MediaDownloader:
         if is_ffprobe_available():
             try:
                 probe = probe_file(local_target)
+
                 if not probe.video_stream:
                     raise MediaValidationError(
                         f"Media asset {asset.asset_id} has no valid video stream.",
                         provider=asset.provider_name,
                     )
-                vs = probe.video_stream
-                video_codec = vs.codec_name or "unknown"
-                width = vs.width or width
-                height = vs.height or height
+
+                stream = probe.video_stream
+                video_codec = stream.codec_name or "unknown"
+                width = stream.width or width
+                height = stream.height or height
                 duration = probe.duration or duration
                 format_name = probe.format.format_name or "mp4"
 
                 if duration <= 0:
                     raise MediaValidationError(
-                        f"Media asset {asset.asset_id} has invalid non-positive duration ({duration}s).",
+                        f"Media asset {asset.asset_id} has invalid duration "
+                        f"({duration}s).",
                         provider=asset.provider_name,
                     )
+
             except RuntimeError as exc:
                 try:
                     os.unlink(local_target)
                 except OSError:
                     pass
                 raise MediaValidationError(
-                    f"FFprobe failed to inspect downloaded asset {asset.asset_id}: {exc}",
+                    f"FFprobe failed to inspect asset {asset.asset_id}: {exc}",
                     provider=asset.provider_name,
                 ) from exc
 
-        # Update MediaAsset metadata in-place
         asset.sha256_hash = sha256_hash
         asset.duration_seconds = duration
         asset.width = width
         asset.height = height
         asset.content_type = "video/mp4"
 
-        # ── Step 5: Save to persistent storage ────────────────────────────────
-        storage_key = f"raw_assets/{asset.asset_id}.mp4"
+        storage_key = f"raw_assets/{safe_asset_id}.mp4"
+
         try:
-            with open(local_target, "rb") as f:
-                content = f.read()
-            self.storage.upload_bytes(BUCKET_UPLOADS, storage_key, content, "video/mp4")
+            with open(local_target, "rb") as file:
+                content = file.read()
+            self.storage.upload_bytes(
+                BUCKET_UPLOADS, storage_key, content, "video/mp4"
+            )
         except Exception as exc:
-            log.warning("storage_upload_raw_asset_failed", asset_id=asset.asset_id, error=str(exc))
+            log.warning(
+                "storage_upload_raw_asset_failed",
+                asset_id=asset.asset_id,
+                job_id=job_id,
+                error=str(exc),
+            )
 
         log.info(
             "media_downloaded_and_validated",
@@ -203,97 +202,159 @@ class MediaDownloader:
         )
 
     def _download_http(self, url: str, target_path: str, job_id: str) -> None:
-        """Download URL to target_path with chunked streaming and retries."""
+        """Download a remote video with retries and atomic replacement."""
         tmp_path = target_path + ".tmp"
         last_error = None
 
         for attempt in range(self._max_retries + 1):
             try:
-                req = urllib.request.Request(
+                request = urllib.request.Request(
                     url,
                     headers={
                         "User-Agent": "SceneForgeAI/0.1 (IncuBrix-Assessment)",
                         "Accept": "video/mp4,video/*;q=0.9,*/*;q=0.8",
                     },
                 )
-                with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                    if resp.status != 200:
-                        raise MediaDownloadError(f"HTTP {resp.status} downloading {url}")
-                    with open(tmp_path, "wb") as out_f:
+
+                with urllib.request.urlopen(
+                    request, timeout=self._timeout
+                ) as response:
+                    if response.status != 200:
+                        raise MediaDownloadError(
+                            f"HTTP {response.status} downloading media."
+                        )
+
+                    with open(tmp_path, "wb") as output:
                         while True:
-                            chunk = resp.read(65536)
+                            chunk = response.read(65536)
                             if not chunk:
                                 break
-                            out_f.write(chunk)
+                            output.write(chunk)
 
-                # Atomic replace on success
                 os.replace(tmp_path, target_path)
                 return
-            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError) as exc:
+
+            except MediaDownloadError:
+                raise
+            except (
+                urllib.error.HTTPError,
+                urllib.error.URLError,
+                TimeoutError,
+                OSError,
+            ) as exc:
                 last_error = exc
+
                 if os.path.exists(tmp_path):
                     try:
                         os.unlink(tmp_path)
                     except OSError:
                         pass
+
                 if attempt < self._max_retries:
                     time.sleep(1.0 * (attempt + 1))
-                    continue
 
-        raise MediaDownloadError(f"Failed to download media from {url}: {last_error}")
+        raise MediaDownloadError(
+            f"Failed to download media from {url}: {last_error}"
+        )
 
     def _generate_mock_motion_video(
-        self, asset: MediaAsset, target_path: str, duration: float, job_id: str
+        self,
+        asset: MediaAsset,
+        target_path: str,
+        duration: float,
+        job_id: str,
     ) -> None:
-        """Generate a genuine synthetic moving video clip for mock assets.
-
-        Uses FFmpeg's video generation filters (e.g. testsrc2, mandelbrot, life)
-        so that mock assets contain actual continuous motion rather than static images.
-        """
+        """Generate a lightweight, genuine moving MP4 for mock assets."""
         ffmpeg_bin = os.getenv("FFMPEG_BIN", "ffmpeg")
 
-        # Pick a deterministic animated pattern based on asset_id
+        # Lower resolution and frame rate reduce CPU use on Render Free.
         patterns = [
-            "testsrc2=size=1920x1080:rate=30",
-            "mandelbrot=size=1920x1080:rate=30",
-            "life=size=1920x1080:rate=30:mold=10",
-            "gradients=size=1920x1080:rate=30:c0=0x1E3A8A:c1=0x3B82F6:speed=0.01",
-            "testsrc=size=1920x1080:rate=30",
+            "testsrc2=size=640x360:rate=24",
+            "testsrc=size=640x360:rate=24",
+            (
+                "gradients=size=640x360:rate=24:"
+                "c0=0x1E3A8A:c1=0x3B82F6:speed=0.05"
+            ),
         ]
+
         seed = int(hashlib.md5(asset.asset_id.encode()).hexdigest(), 16)
         pattern = patterns[seed % len(patterns)]
 
-        if is_ffmpeg_available():
-            cmd = [
-                ffmpeg_bin,
-                "-y",
-                "-f", "lavfi",
-                "-i", pattern,
-                "-t", str(max(duration, 5.0)),
-                "-c:v", "libx264",
-                "-pix_fmt", "yuv420p",
-                "-preset", "ultrafast",
-                "-crf", "26",
-                target_path,
-            ]
-            try:
-                subprocess.run(cmd, check=True, capture_output=True, timeout=20)
-                return
-            except Exception as exc:
-                log.warning("mock_motion_ffmpeg_failed", asset_id=asset.asset_id, error=str(exc))
-
-        # Fallback minimal MP4 bytes if ffmpeg generation fails
-        with open(target_path, "wb") as f:
-            f.write(
-                b"\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2mp41"
-                b"\x00\x00\x00\x08free"
-                b"\x00\x00\x04\x00mdat" + (b"\xAA\x55" * 1024)
+        if not is_ffmpeg_available():
+            raise MediaDownloadError(
+                "FFmpeg is unavailable; cannot generate mock video.",
+                provider=asset.provider_name,
             )
+
+        # Bound duration so a mock asset cannot consume excessive CPU.
+        clip_duration = min(max(float(duration), 3.0), 10.0)
+
+        command = [
+            ffmpeg_bin,
+            "-y",
+            "-f", "lavfi",
+            "-i", pattern,
+            "-t", str(clip_duration),
+            "-an",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-preset", "ultrafast",
+            "-crf", "30",
+            "-threads", "1",
+            "-movflags", "+faststart",
+            target_path,
+        ]
+
+        try:
+            subprocess.run(
+                command,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=_MOCK_VIDEO_TIMEOUT,
+            )
+
+            if (
+                not os.path.isfile(target_path)
+                or os.path.getsize(target_path) < _MIN_VIDEO_FILE_SIZE
+            ):
+                raise MediaDownloadError(
+                    "FFmpeg completed but produced an invalid mock video.",
+                    provider=asset.provider_name,
+                )
+
+        except subprocess.TimeoutExpired as exc:
+            log.error(
+                "mock_motion_ffmpeg_timeout",
+                asset_id=asset.asset_id,
+                job_id=job_id,
+                timeout_seconds=_MOCK_VIDEO_TIMEOUT,
+            )
+            raise MediaDownloadError(
+                "FFmpeg timed out generating mock video.",
+                provider=asset.provider_name,
+            ) from exc
+
+        except subprocess.CalledProcessError as exc:
+            log.error(
+                "mock_motion_ffmpeg_failed",
+                asset_id=asset.asset_id,
+                job_id=job_id,
+                returncode=exc.returncode,
+                stderr=(exc.stderr or "")[-2000:],
+            )
+            raise MediaDownloadError(
+                "FFmpeg failed to generate mock video.",
+                provider=asset.provider_name,
+            ) from exc
 
     @staticmethod
     def _compute_file_sha256(path: str) -> str:
+        """Compute the SHA-256 hash of a file."""
         hasher = hashlib.sha256()
-        with open(path, "rb") as f:
-            while chunk := f.read(65536):
+
+        with open(path, "rb") as file:
+            while chunk := file.read(65536):
                 hasher.update(chunk)
+
         return hasher.hexdigest()
