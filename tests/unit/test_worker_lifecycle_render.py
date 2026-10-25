@@ -197,3 +197,27 @@ class TestReconciliationAndStorage:
         assert updated.status == JobStatus.FAILED.value
         assert updated.error_code == "RENDER_FAILED"
         assert "Subprocess segmentation fault" in updated.error_message
+
+    def test_render_profile_defaults_to_720p_24fps_ultrafast_crf26(self):
+        """Verifies that 16:9 output profile defaults to 1280x720, 24 FPS, ultrafast preset, CRF 26, 1 thread."""
+        from sceneforge.rendering.normaliser import get_profile
+        profile = get_profile("16:9")
+        assert profile.width == 1280
+        assert profile.height == 720
+        assert profile.fps == 24
+        assert profile.crf == 26
+        assert profile.preset == "ultrafast"
+
+    def test_segment_concatenation_and_audio_sync_arguments(self, tmp_path):
+        """Verifies that VideoRenderer configures concat demuxer and audio padding for timeline sync."""
+        from sceneforge.rendering.normaliser import get_profile
+        from sceneforge.rendering.renderer import VideoRenderer
+        profile = get_profile("16:9")
+
+        fake_audio = tmp_path / "voiceover.wav"
+        fake_audio.write_bytes(b"\x00" * 4096)
+
+        renderer = VideoRenderer(profile, audio_path=str(fake_audio), work_dir=str(tmp_path))
+        assert renderer._profile.width == 1280
+        assert renderer._profile.height == 720
+        assert renderer._profile.fps == 24

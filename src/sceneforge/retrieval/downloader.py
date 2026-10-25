@@ -253,10 +253,12 @@ class MediaDownloader:
         Uses FFmpeg's video generation filters so that mock assets contain
         actual continuous motion. To minimize CPU cost on resource-constrained
         or free-tier cloud instances, base generation uses a lightweight resolution
-        (640x360 @ 15fps) and upscales to the target dimensions (asset.width x asset.height @ 30fps).
+        (640x360 @ 15fps) and upscales to 720p target dimensions (1280x720 @ 24fps).
         """
-        width = asset.width or 1920
-        height = asset.height or 1080
+        width = int(os.getenv("OUTPUT_WIDTH", "1280"))
+        height = int(os.getenv("OUTPUT_HEIGHT", "720"))
+        if asset.width and asset.height and asset.width < asset.height:
+            width, height = height, width
         ffmpeg_bin = os.getenv("FFMPEG_BIN", "ffmpeg")
 
         # Pick a deterministic animated pattern based on asset_id.
@@ -281,11 +283,11 @@ class MediaDownloader:
                 "-f", "lavfi",
                 "-i", pattern,
                 "-t", str(max(duration, 5.0)),
-                "-vf", f"scale={width}:{height}:flags=fast_bilinear,fps=30",
+                "-vf", f"scale={width}:{height}:flags=fast_bilinear,fps=24",
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
                 "-preset", "ultrafast",
-                "-crf", "28",
+                "-crf", "26",
                 tmp_target,
             ]
             try:

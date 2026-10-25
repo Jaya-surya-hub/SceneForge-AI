@@ -23,11 +23,16 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-_TARGET_FPS = int(os.getenv("OUTPUT_FPS", "30"))
+_DEFAULT_WIDTH_16_9 = int(os.getenv("OUTPUT_WIDTH", "1280"))
+_DEFAULT_HEIGHT_16_9 = int(os.getenv("OUTPUT_HEIGHT", "720"))
+_TARGET_FPS = int(os.getenv("OUTPUT_FPS", "24"))
 _TARGET_PIX_FMT = os.getenv("PIXEL_FORMAT", "yuv420p")
 _AUDIO_SAMPLE_RATE = int(os.getenv("AUDIO_SAMPLE_RATE", "44100"))
 _AUDIO_CHANNELS = int(os.getenv("AUDIO_CHANNELS", "2"))
 _AUDIO_LUFS = float(os.getenv("AUDIO_LUFS", "-16.0"))
+_FFMPEG_PRESET = os.getenv("FFMPEG_PRESET", "ultrafast")
+_FFMPEG_THREADS = os.getenv("FFMPEG_THREADS", "1")
+_FFMPEG_CRF = int(os.getenv("FFMPEG_CRF", "26"))
 
 
 @dataclass
@@ -41,15 +46,15 @@ class OutputProfile:
     audio_channels: int = _AUDIO_CHANNELS
     video_codec: str = "libx264"
     audio_codec: str = "aac"
-    crf: int = 23
-    preset: str = "fast"
+    crf: int = _FFMPEG_CRF
+    preset: str = _FFMPEG_PRESET
     audio_bitrate: str = "128k"
 
 
 PROFILES: dict[str, OutputProfile] = {
-    "16:9": OutputProfile(width=1920, height=1080),
-    "9:16": OutputProfile(width=1080, height=1920),
-    "1:1":  OutputProfile(width=1080, height=1080),
+    "16:9": OutputProfile(width=_DEFAULT_WIDTH_16_9, height=_DEFAULT_HEIGHT_16_9),
+    "9:16": OutputProfile(width=_DEFAULT_HEIGHT_16_9, height=_DEFAULT_WIDTH_16_9),
+    "1:1":  OutputProfile(width=_DEFAULT_HEIGHT_16_9, height=_DEFAULT_HEIGHT_16_9),
 }
 
 

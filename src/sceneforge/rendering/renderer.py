@@ -512,6 +512,7 @@ class VideoRenderer:
     def _run_ffmpeg(self, args: list[str], timeout: int, context: str) -> None:
         """Run an FFmpeg command; raise RenderError on failure."""
         log.debug("ffmpeg_cmd", context=context, args=args[:6])
+        target_out = args[-1] if args and not args[-1].startswith("-") else None
         try:
             result = subprocess.run(
                 args,
@@ -520,12 +521,22 @@ class VideoRenderer:
                 timeout=timeout,
             )
         except FileNotFoundError:
+            if target_out and os.path.isfile(target_out):
+                try:
+                    os.unlink(target_out)
+                except OSError:
+                    pass
             raise RenderError(
                 f"ffmpeg not found at '{_FFMPEG_BIN}'. "
                 "FFmpeg must be installed for rendering. "
                 "In Docker: use the provided Dockerfile which installs FFmpeg."
             )
         except subprocess.TimeoutExpired as exc:
+            if target_out and os.path.isfile(target_out):
+                try:
+                    os.unlink(target_out)
+                except OSError:
+                    pass
             stderr_output = getattr(exc, "stderr", None) or ""
             if isinstance(stderr_output, bytes):
                 stderr_output = stderr_output.decode(errors="replace")
@@ -534,6 +545,11 @@ class VideoRenderer:
                 f"FFmpeg timed out after {timeout}s during '{context}'. {stderr_snippet}".strip()
             )
         if result.returncode != 0:
+            if target_out and os.path.isfile(target_out):
+                try:
+                    os.unlink(target_out)
+                except OSError:
+                    pass
             raise RenderError(
                 f"FFmpeg failed during '{context}' (exit {result.returncode}): "
                 f"{result.stderr[-600:]}"

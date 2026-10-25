@@ -365,20 +365,25 @@ class TestNormaliser:
     def test_get_profile_16_9(self):
         from sceneforge.rendering.normaliser import get_profile
         p = get_profile("16:9")
-        assert p.width == 1920
-        assert p.height == 1080
+        assert p.width == 1280
+        assert p.height == 720
+        assert p.fps == 24
+        assert p.preset == "ultrafast"
+        assert p.crf == 26
 
     def test_get_profile_9_16(self):
         from sceneforge.rendering.normaliser import get_profile
         p = get_profile("9:16")
-        assert p.width == 1080
-        assert p.height == 1920
+        assert p.width == 720
+        assert p.height == 1280
+        assert p.fps == 24
 
     def test_get_profile_1_1(self):
         from sceneforge.rendering.normaliser import get_profile
         p = get_profile("1:1")
-        assert p.width == 1080
-        assert p.height == 1080
+        assert p.width == 720
+        assert p.height == 720
+        assert p.fps == 24
 
     def test_get_profile_unknown_raises(self):
         from sceneforge.rendering.normaliser import get_profile
@@ -390,14 +395,14 @@ class TestNormaliser:
         p = get_profile("16:9")
         vf = build_video_filter(p)
         assert "scale=" in vf
-        assert "1920" in vf
-        assert "1080" in vf
+        assert "1280" in vf
+        assert "720" in vf
         assert "yuv420p" in vf
 
     def test_build_video_filter_with_extra(self):
         from sceneforge.rendering.normaliser import get_profile, build_video_filter
         p = get_profile("16:9")
-        vf = build_video_filter(p, extra_vf="crop=1920:1080:0:0")
+        vf = build_video_filter(p, extra_vf="crop=1280:720:0:0")
         assert vf.startswith("crop=")
 
     def test_build_audio_filter_contains_aresample(self):
@@ -520,7 +525,7 @@ class TestRenderCache:
 class TestQAChecker:
     """Tests use monkeypatching to avoid real ffprobe calls."""
 
-    def _fake_probe(self, *, width=1920, height=1080, fps="30/1",
+    def _fake_probe(self, *, width=1280, height=720, fps="24/1",
                     duration=10.0, video_codec="h264", audio_codec="aac",
                     pix_fmt="yuv420p"):
         from sceneforge.rendering.ffprobe import ProbeResult, FormatInfo, StreamInfo
@@ -598,14 +603,14 @@ class TestQAChecker:
         from sceneforge.quality.checker import QAChecker
         from sceneforge.rendering.normaliser import get_profile
         checker = QAChecker(str(tmp_path / "out.mp4"), expected_profile=get_profile("16:9"))
-        checker._probe = self._fake_probe(fps="30/1")
+        checker._probe = self._fake_probe(fps="24/1")
         assert checker._check_frame_rate().status == "PASS"
 
     def test_check_frame_rate_fail_wrong_fps(self, tmp_path):
         from sceneforge.quality.checker import QAChecker
         from sceneforge.rendering.normaliser import get_profile
         checker = QAChecker(str(tmp_path / "out.mp4"), expected_profile=get_profile("16:9"))
-        checker._probe = self._fake_probe(fps="24/1")
+        checker._probe = self._fake_probe(fps="15/1")
         assert checker._check_frame_rate().status == "FAIL"
 
     def test_check_dimensions_pass(self, tmp_path):
@@ -613,7 +618,7 @@ class TestQAChecker:
         from sceneforge.rendering.normaliser import get_profile
         profile = get_profile("16:9")
         checker = QAChecker(str(tmp_path / "out.mp4"), expected_profile=profile)
-        checker._probe = self._fake_probe(width=1920, height=1080)
+        checker._probe = self._fake_probe(width=1280, height=720)
         assert checker._check_dimensions().status == "PASS"
 
     def test_check_dimensions_fail_wrong_size(self, tmp_path):
@@ -621,7 +626,7 @@ class TestQAChecker:
         from sceneforge.rendering.normaliser import get_profile
         profile = get_profile("16:9")
         checker = QAChecker(str(tmp_path / "out.mp4"), expected_profile=profile)
-        checker._probe = self._fake_probe(width=1280, height=720)
+        checker._probe = self._fake_probe(width=640, height=360)
         assert checker._check_dimensions().status == "FAIL"
 
     def test_check_duration_pass(self, tmp_path):
