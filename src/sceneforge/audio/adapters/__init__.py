@@ -1,0 +1,1 @@
+"""Audio adapter implementations."""

@@ -1,0 +1,220 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SceneForge AI",
+    "description": "Script and Voiceover to B-roll Video Engine. IncuBrix Software Engineer Assessment — PS3.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Liveness check",
+        "description": "Returns 200 if the API process is alive.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/HealthResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Readiness check",
+        "description": "Returns 200 if all dependencies are reachable.",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ReadyResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "post": {
+        "tags": ["jobs"],
+        "summary": "Create Job",
+        "description": "Create a new video generation job.",
+        "operationId": "create_job_jobs_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {"type": "string"}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/JobCreateRequest"}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/JobCreateResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{job_id}": {
+      "get": {
+        "tags": ["jobs"],
+        "summary": "Get Job Status",
+        "operationId": "get_job_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job status",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/JobStatusResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{job_id}/artifacts": {
+      "get": {
+        "tags": ["jobs"],
+        "summary": "List Job Artifacts",
+        "operationId": "list_artifacts_jobs__job_id__artifacts_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artifact list",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ArtifactListResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/{bucket}/{path}": {
+      "get": {
+        "tags": ["files"],
+        "summary": "Download Artifact",
+        "description": "Serve a stored artifact from filesystem storage.",
+        "operationId": "get_file_files__bucket___path__get",
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "version": {"type": "string"},
+          "environment": {"type": "string"}
+        },
+        "required": ["status", "version", "environment"]
+      },
+      "ReadyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "checks": {"type": "object", "additionalProperties": {"type": "string"}}
+        },
+        "required": ["status", "checks"]
+      },
+      "JobCreateRequest": {
+        "type": "object",
+        "properties": {
+          "script": {"type": "string", "maxLength": 100000},
+          "aspect_ratio": {"type": "string", "pattern": "^(16:9|9:16|1:1)$", "default": "16:9"},
+          "tts_adapter": {"type": "string", "default": "mock"},
+          "stock_provider": {"type": "string", "default": "mock"},
+          "callback_url": {"type": "string", "maxLength": 512}
+        },
+        "required": ["script"]
+      },
+      "JobCreateResponse": {
+        "type": "object",
+        "properties": {
+          "job_id": {"type": "string"},
+          "status": {"type": "string"},
+          "created_at": {"type": "string", "format": "date-time"}
+        },
+        "required": ["job_id", "status", "created_at"]
+      },
+      "JobStatusResponse": {
+        "type": "object",
+        "properties": {
+          "job_id": {"type": "string"},
+          "status": {"type": "string"},
+          "error_code": {"type": "string"},
+          "error_message": {"type": "string"},
+          "created_at": {"type": "string", "format": "date-time"},
+          "updated_at": {"type": "string", "format": "date-time"},
+          "completed_at": {"type": "string", "format": "date-time"},
+          "aspect_ratio": {"type": "string"}
+        },
+        "required": ["job_id", "status", "created_at", "updated_at", "aspect_ratio"]
+      },
+      "ArtifactListResponse": {
+        "type": "object",
+        "properties": {
+          "job_id": {"type": "string"},
+          "artifacts": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["job_id", "artifacts"]
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sceneforge.ai/schemas/timeline.schema.json",
+  "title": "SceneForge Timeline",
+  "description": "Scene-by-scene timeline produced by a completed SceneForge job.",
+  "type": "object",
+  "required": ["job_id", "generated_at", "scenes"],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "description": "UUID of the job that produced this timeline."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when the timeline was written."
+    },
+    "note": {
+      "type": "string",
+      "description": "Optional human-readable note (e.g. STUB indicator)."
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scene_index", "narration_text"],
+        "properties": {
+          "scene_index": { "type": "integer", "minimum": 0 },
+          "narration_text": { "type": ["string", "null"] },
+          "start_time": { "type": ["number", "null"], "minimum": 0 },
+          "end_time": { "type": ["number", "null"], "minimum": 0 },
+          "visual_concept": { "type": ["string", "null"] },
+          "asset_id": { "type": ["string", "null"] },
+          "route": {
+            "type": ["string", "null"],
+            "enum": ["stock", "generated", "card", "failed", null]
+          },
+          "relevance_score": {
+            "type": ["number", "null"],
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "caption_text": { "type": ["string", "null"] },
+          "selection_reason": { "type": ["string", "null"] },
+          "rights_record_id": { "type": ["string", "null"] },
+          "fallback_attempts": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "warnings": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,50 @@
+Phase 2 — No-Key Test Suite Run
+================================
+Date: 2026-10-19
+Python: 3.14.2
+Platform: win32
+
+Command:
+  python run_all_tests.py
+  (sets DATABASE_URL=sqlite:///, SKIP_STARTUP_CHECKS=true, CALLBACK_HMAC_SECRET=test-secret-key-for-unit-tests)
+
+Results:
+  129 tests collected
+  129 passed
+  0 failed
+  0 errors
+  0 skipped
+  Duration: 1.85s
+  Exit code: 0
+
+Test files run:
+  tests/unit/test_state_machine.py     — 38 tests  PASS
+  tests/unit/test_callbacks.py         — 12 tests  PASS
+  tests/unit/test_mock_adapters.py     — 31 tests  PASS
+  tests/unit/test_error_schema.py      — 14 tests  PASS
+  tests/unit/test_repository.py        — 17 tests  PASS
+  tests/integration/test_api_jobs.py   — 17 tests  PASS
+
+Defects found and fixed during Phase 2:
+  1. SQLite incompatibility with PostgreSQL JSONB type in ORM models
+     Fix: Changed all JSONB columns to SQLAlchemy JSON (portable across dialects)
+     
+  2. SQLite incompatibility with pool_size/max_overflow in create_engine
+     Fix: Conditional pool params based on dialect detection
+     
+  3. Engine created at module import time before DATABASE_URL env var was set
+     Fix: Lazy engine creation in database.py via get_engine() function
+     
+  4. FastAPI lifespan tried to connect to MinIO (Docker hostname) during tests
+     Fix: Added SKIP_STARTUP_CHECKS env var; socket connectivity check with 2s timeout
+     
+  5. State machine: FAILED incorrectly in TERMINAL_STATES (FAILED allows retry to QUEUED)
+     Fix: Removed FAILED from TERMINAL_STATES frozenset
+     
+  6. JobStatusResponse.model_validate(orm_obj) failed because ORM field is 'id' not 'job_id'
+     Fix: Overrode model_validate to map id→job_id; changed route handlers to use explicit constructors
+     
+  7. ORM objects not refreshed after execute(update()) bulk update
+     Fix: Added db_session.expire(job) followed by re-fetch in affected repository tests
+
+No failures remain. All 129 tests pass.

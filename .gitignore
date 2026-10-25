@@ -1,0 +1,106 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Pytest / Cache
+.pytest_cache/
+.coverage
+htmlcov/
+pytest-cache-files-*/
+
+# Temporary files & logs
+*.log
+/tmp/
+sf_render_*
+output_verified.mp4
+
+# IncuBrix Signal Room
+*.db
+*.sqlite
+*.sqlite3
+storage/evidence/*
+!storage/evidence/.gitkeep
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.signalroom/
+
+# SceneForge storage artifacts & media
+storage/sceneforge-uploads/*
+!storage/sceneforge-uploads/.gitkeep
+storage/sceneforge-artifacts/*
+!storage/sceneforge-artifacts/.gitkeep
+storage/sceneforge-cache/*
+!storage/sceneforge-cache/.gitkeep
+*.mp4
+*.mp3
+*.wav
+*.m4a
+*.aac
+*.ogg
+*.flac
+*.bak
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Certificates & Private Keys
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+
+# Local debugging and generated reports
+debug_qa*.py
+batch_report.json
+
+# Local databases and environment secrets
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+
+# Credentials and certificates
+*.pem
+*.key
+*.pfx
+*.p12
+*.cert
+*.crt
+
+# Generated media and build artifacts
+*.mp4
+*.mp3
+*.wav
+*.m4a
+*.log
+node_modules/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+.pytest_cache/
+
+Assessment3_Submission.xlsx
+Assessment3_YourName.xlsx
+
+Assessment3_Submission.xlsx
+Assessment3_YourName.xlsx

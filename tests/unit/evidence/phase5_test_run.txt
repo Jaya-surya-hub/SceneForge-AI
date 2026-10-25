@@ -1,0 +1,89 @@
+Phase 5 — Complete Test Suite Run
+===================================
+Date: 2026-10-19
+Python: 3.14.2
+Platform: win32
+
+Command:
+  python run_phase5.py
+  (all adapters mocked, SKIP_STARTUP_CHECKS=true)
+
+Results:
+  449 tests collected
+  449 passed
+  0 failed
+  0 errors
+  Duration: 2.14s
+  Exit code: 0
+
+Test breakdown by phase:
+  Phase 2 baseline                   129 PASS
+  Phase 3A (audio pipeline)           90 PASS
+  Phase 3B (planner + timeline)       88 PASS
+  Phase 4 (retrieval + rights)        71 PASS
+  Phase 5 (rendering + QA)            71 PASS
+                                    ─────────
+  TOTAL                              449 PASS
+
+Phase 5 new test file: tests/unit/test_rendering.py — 71 tests
+
+=== FFmpeg Availability ===
+FFmpeg is NOT installed on this local Windows machine.
+  ffmpeg: not found on PATH
+  ffprobe: not found on PATH
+
+All FFmpeg-related tests use monkeypatched subprocess.run.
+No real MP4 was produced locally.
+
+Real rendering runs inside Docker:
+  - Dockerfile: apt-get install -y ffmpeg (Debian package, includes libx264)
+  - Start: docker compose up --build
+  - FFmpeg version available in container: system package (≥ 4.x on Debian)
+
+=== QA Check Outcomes (with monkeypatched ffprobe) ===
+All QA checks implemented:
+  file_exists           → PASS/FAIL   (tested both)
+  file_nonempty         → PASS/FAIL   (tested both)
+  ffprobe_available     → PASS/UNKNOWN (tested unavailable case)
+  container             → PASS/FAIL   (tested wrong format)
+  video_codec           → PASS/FAIL   (tested wrong codec)
+  audio_codec           → PASS/SKIPPED
+  frame_rate            → PASS/FAIL   (tested 24fps vs 30fps)
+  dimensions            → PASS/FAIL   (tested wrong dimensions)
+  duration              → PASS/FAIL   (tested zero duration)
+  audio_present         → PASS/FAIL   (tested missing audio stream)
+  pixel_format          → PASS (tested)
+  subtitles             → PASS/FAIL/SKIPPED (all three tested)
+  rights_coverage       → PASS/SKIPPED
+  duplicate_scenes      → PASS/FAIL   (tested duplicate asset IDs)
+
+When ffprobe is unavailable: media checks return UNKNOWN; overall = UNKNOWN.
+UNKNOWN is never promoted to PASS silently.
+
+=== End-to-End Milestone Status ===
+BLOCKED by FFmpeg unavailability on local machine.
+
+What works end-to-end (mocked):
+  ✓ Script → audio pipeline (TTS mock)
+  ✓ Audio pipeline → scene planning (rule-based)
+  ✓ Scene planning → timeline
+  ✓ Timeline → retrieval (mock stock)
+  ✓ Retrieval → rights records
+  ✓ Rights records → serialised rights.json
+  ✓ Timeline → QA checker (structural checks pass)
+  ✓ Timeline → captions.srt
+
+What requires Docker for real execution:
+  ✗ FFmpeg rendering → real MP4
+  ✗ ffprobe QA checks → real measurements
+  ✗ Burned-in captions
+  ✗ Portrait reframing (blurred-pad via FFmpeg)
+  ✗ Typography/data card rendering
+
+Path to real render:
+  docker compose up --build
+  curl -X POST http://localhost:8000/jobs \
+    -H "Content-Type: application/json" \
+    -H "Idempotency-Key: e2e-test-001" \
+    -d '{"script": "Innovation drives progress.", "aspect_ratio": "16:9"}'
+  # → returns job_id; poll /jobs/{id}; download /jobs/{id}/artifacts/output.mp4

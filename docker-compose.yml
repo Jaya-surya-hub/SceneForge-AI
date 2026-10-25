@@ -1,0 +1,177 @@
+# SceneForge AI — Docker Compose
+#
+# Services:
+#   db      — PostgreSQL 15
+#   redis   — Redis 7
+#   minio   — MinIO (S3-compatible object storage)
+#   api     — FastAPI application
+#   worker  — RQ background worker
+#   web     — React frontend (Nginx, Phase 7)
+#
+# Startup:
+#   docker compose up --build
+#
+# The API runs Alembic migrations automatically before starting.
+
+x-common-env: &common-env
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: ${POSTGRES_DB:-sceneforge}
+  POSTGRES_USER: ${POSTGRES_USER:-sceneforge}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sceneforge_dev_password}
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  MINIO_ENDPOINT: http://minio:9090
+  MINIO_ROOT_USER: ${MINIO_ROOT_USER:-test}
+  MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-test}
+  MINIO_USE_SSL: "false"
+  MINIO_BUCKET_UPLOADS: sceneforge-uploads
+  MINIO_BUCKET_ARTIFACTS: sceneforge-artifacts
+  MINIO_BUCKET_CACHE: sceneforge-cache
+  STORAGE_BACKEND: filesystem
+  STORAGE_ROOT: /app/storage
+  TTS_PRE_GENERATED_PATH: /app/storage/tts_narration_e2e.mp3
+  API_VERSION: "0.1.0"
+  ENVIRONMENT: development
+  LOG_LEVEL: INFO
+  LOG_FORMAT: json
+  STOCK_PROVIDER: ${STOCK_PROVIDER:-pixabay}
+  ROUTER_STOCK_MIN_RELEVANCE: ${ROUTER_STOCK_MIN_RELEVANCE:-0.30}
+  BURN_CAPTIONS: ${BURN_CAPTIONS:-true}
+  TTS_ADAPTER: ${TTS_ADAPTER:-gtts}
+  STT_ADAPTER: ${STT_ADAPTER:-speech_recognition}
+  LLM_ADAPTER: ${LLM_ADAPTER:-none}
+  PEXELS_API_KEY: ${PEXELS_API_KEY:-}
+  PIXABAY_API_KEY: ${PIXABAY_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  CALLBACK_HMAC_SECRET: ${CALLBACK_HMAC_SECRET:-change_me_in_production}
+  CALLBACK_TIMESTAMP_TOLERANCE: "300"
+  IDEMPOTENCY_KEY_TTL: "86400"
+  MAX_UPLOAD_BYTES: "104857600"
+  CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000"
+  PYTHONPATH: /app/src
+  PYTHONUNBUFFERED: "1"
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sceneforge}
+      POSTGRES_USER: ${POSTGRES_USER:-sceneforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sceneforge_dev_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sceneforge}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "6379:6379"
+
+  # ── Object Storage (S3Mock — Adobe's open-source S3-compatible mock) ─
+  minio:
+    image: adobe/s3mock:latest
+    restart: unless-stopped
+    environment:
+      initialBuckets: sceneforge-uploads,sceneforge-artifacts,sceneforge-cache
+      retainFilesOnExit: "true"
+    ports:
+      - "9090:9090"
+
+  # ── API ────────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    restart: unless-stopped
+    command: >
+      sh -c "
+        mkdir -p /app/storage/sceneforge-uploads /app/storage/sceneforge-artifacts /app/storage/sceneforge-cache 2>/dev/null || true &&
+        chmod -R 777 /app/storage 2>/dev/null || true &&
+        echo 'Running Alembic migrations...' &&
+        alembic upgrade head &&
+        echo 'Starting API...' &&
+        uvicorn sceneforge.api.app:app --host 0.0.0.0 --port 8000
+      "
+    environment:
+      <<: *common-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - ./src:/app/src:ro
+      - ./alembic:/app/alembic:ro
+      - ./alembic.ini:/app/alembic.ini:ro
+      - ./apps/web/public:/app/apps/web/public:ro
+      - sceneforge_storage:/app/storage
+
+  # ── Worker ─────────────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    restart: unless-stopped
+    command: >
+      sh -c "
+        mkdir -p /app/storage/sceneforge-uploads /app/storage/sceneforge-artifacts /app/storage/sceneforge-cache &&
+        rq worker
+          --url redis://redis:6379/0
+          --name sceneforge-worker
+          default
+      "
+    environment:
+      <<: *common-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src:ro
+      - sceneforge_storage:/app/storage
+
+  # ── Web (frontend) ─────────────────────────────────────────────────────────
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./apps/web/public:/usr/share/nginx/html:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
+  sceneforge_storage:

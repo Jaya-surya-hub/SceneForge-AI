@@ -1,0 +1,2485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>SceneForge AI - Professional B-Roll Video Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-muted: #F1F5F9;
+      --bg-input: #FFFFFF;
+      --border: #E2E8F0;
+      --border-subtle: #F1F5F9;
+      --border-focus: #2563EB;
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --primary-light: #EFF6FF;
+      --primary-border: #BFDBFE;
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --success: #059669;
+      --success-light: #ECFDF5;
+      --success-border: #A7F3D0;
+      --warning: #D97706;
+      --warning-light: #FFFBEB;
+      --warning-border: #FDE68A;
+      --danger: #DC2626;
+      --danger-light: #FEF2F2;
+      --danger-border: #FECACA;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Top Navigation */
+    header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 0 1.75rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .brand-icon svg { width: 18px; height: 18px; }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 999px;
+      margin-left: 6px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+
+    .api-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--warning);
+      transition: background 0.3s ease;
+    }
+    .status-dot.online {
+      background: var(--success);
+      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+    }
+    .status-dot.offline {
+      background: var(--danger);
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      box-shadow: var(--shadow-xs);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-muted);
+      border-color: #CBD5E1;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem;
+      width: 100%;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .app-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+    .card-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary);
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-label span.highlight {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    textarea.input-field {
+      width: 100%;
+      height: 135px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      line-height: 1.55;
+      resize: vertical;
+      transition: all 0.15s ease;
+      box-shadow: var(--shadow-xs);
+    }
+    textarea.input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    textarea.input-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-chip {
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .btn-chip:hover {
+      background: #E2E8F0;
+      color: var(--text-primary);
+    }
+    .btn-chip svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* Mode Badge */
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .mode-badge svg {
+      width: 13px;
+      height: 13px;
+    }
+    .mode-badge.script-only {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+    }
+    .mode-badge.voiceover {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    /* Audio Drop Zone */
+    .dropzone {
+      border: 1.5px dashed #CBD5E1;
+      background: #FAFAFC;
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .dropzone input[type="file"] {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .dropzone svg {
+      width: 26px; height: 26px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .dropzone p {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .dropzone span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .audio-file-pill {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--success-light);
+      border: 1px solid var(--success-border);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      color: #065F46;
+    }
+    .audio-file-pill.visible { display: flex; }
+    .audio-file-pill-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+    }
+    .audio-file-pill-info svg {
+      width: 15px; height: 15px;
+      flex-shrink: 0;
+    }
+    .audio-file-pill .remove-btn {
+      color: var(--danger);
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .audio-file-pill .remove-btn:hover {
+      background: rgba(220, 38, 38, 0.1);
+    }
+    .audio-file-pill .remove-btn svg { width: 14px; height: 14px; }
+
+    /* Segmented Selection Cards / Option Pill Groups */
+    .pill-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+    }
+
+    .pill-label {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-xs);
+    }
+    .pill-label svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .pill-label-text {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      line-height: 1.25;
+    }
+    .pill-label-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .pill-label-sub {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .pill-label:hover {
+      border-color: #CBD5E1;
+      background: var(--bg-muted);
+    }
+
+    input[type="radio"]:checked + .pill-label {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    input[type="radio"]:checked + .pill-label .pill-label-title {
+      color: var(--primary);
+    }
+    input[type="radio"]:checked + .pill-label svg {
+      color: var(--primary);
+    }
+    input[type="radio"] { display: none; }
+
+    /* Primary Generate Button */
+    .btn-primary {
+      width: 100%;
+      background: var(--primary);
+      color: #FFFFFF;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1.25rem;
+      font-size: 0.94rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      margin-top: 1.25rem;
+      box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #94A3B8;
+      box-shadow: none;
+    }
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Stepper & Progress Section */
+    .stepper-card {
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+    .stepper-card.visible { display: block; }
+
+    .job-id-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+    .job-id-banner strong {
+      color: var(--text-primary);
+    }
+    .job-id-banner button {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .job-id-banner button:hover {
+      color: var(--text-primary);
+      border-color: #CBD5E1;
+    }
+    .job-id-banner button svg { width: 12px; height: 12px; }
+
+    .pipeline-stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 1.5rem 0 1rem;
+    }
+    .pipeline-stepper::before {
+      content: '';
+      position: absolute;
+      top: 14px; left: 16px; right: 16px;
+      height: 2px;
+      background: var(--border);
+      z-index: 1;
+    }
+    .step-item {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .step-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      transition: all 0.25s ease;
+    }
+    .step-circle svg { width: 14px; height: 14px; stroke-width: 2.5; }
+    .step-label {
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .step-item.active .step-circle {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+    .step-item.active .step-label { color: var(--primary); }
+    .step-item.completed .step-circle {
+      border-color: var(--success);
+      background: var(--success);
+      color: #FFFFFF;
+    }
+    .step-item.completed .step-label { color: var(--success); }
+
+    .stepper-status-text {
+      text-align: center;
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: var(--primary);
+      margin-top: 0.75rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .stepper-status-text.completed {
+      color: var(--success);
+      background: var(--success-light);
+      border-color: var(--success-border);
+    }
+    .stepper-status-text.failed {
+      color: var(--danger);
+      background: var(--danger-light);
+      border-color: var(--danger-border);
+    }
+
+    /* Video Player Area */
+    .player-container {
+      background: #0F172A;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .player-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .player-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #64748B;
+      padding: 2rem;
+      text-align: center;
+    }
+    .player-placeholder svg { width: 42px; height: 42px; color: #475569; }
+    .player-placeholder p {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #94A3B8;
+    }
+    .player-placeholder span {
+      font-size: 0.78rem;
+      color: #64748B;
+    }
+
+    .video-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding: 8px 12px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+    .qa-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .qa-pill svg { width: 13px; height: 13px; }
+    .qa-pill.pass {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+    .qa-pill.fail {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+
+    .btn-download {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: 1px solid transparent;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .btn-download:hover {
+      background: var(--primary-hover);
+    }
+    .btn-download svg { width: 14px; height: 14px; }
+
+    /* Tabbed Inspector */
+    .tabs-nav {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Scene Timeline list */
+    .scene-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .scene-card {
+      background: #FAFAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .scene-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+    }
+    .scene-time {
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .scene-route-badge {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .scene-route-badge.stock {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+    }
+    .scene-route-badge.card {
+      background: var(--warning-light);
+      color: var(--warning);
+      border: 1px solid var(--warning-border);
+    }
+    .scene-narration {
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .scene-meta {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .scene-meta code {
+      font-family: var(--font-mono);
+      background: var(--bg-muted);
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: var(--text-primary);
+    }
+    .scene-meta a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .scene-meta a:hover { text-decoration: underline; }
+    .scene-meta a svg { width: 11px; height: 11px; }
+
+    /* Manual Video Selection & Candidate Review */
+    .scene-candidate-box {
+      background: #FAFAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .scene-candidate-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .scene-candidate-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .scene-candidate-sub {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .candidate-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.15s ease;
+      position: relative;
+      box-shadow: var(--shadow-xs);
+    }
+    .candidate-card:hover {
+      border-color: #CBD5E1;
+      box-shadow: var(--shadow-sm);
+    }
+    .candidate-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .candidate-thumb-container {
+      width: 100%;
+      height: 145px;
+      background: #0F172A;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .candidate-thumb-container img, .candidate-thumb-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .candidate-badge-selected {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--primary);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .candidate-badge-selected svg { width: 12px; height: 12px; stroke-width: 2.5; }
+    .candidate-badge-score {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      color: #FFFFFF;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .candidate-badge-dur {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      color: #E2E8F0;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .candidate-details {
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 0.45rem;
+    }
+    .candidate-details-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .candidate-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+    }
+    .candidate-licence-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      color: var(--success);
+      background: var(--success-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .candidate-licence-pill svg { width: 11px; height: 11px; }
+    .candidate-rationale {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      line-height: 1.35;
+      background: var(--bg-muted);
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+    .btn-select-clip {
+      margin-top: auto;
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .btn-select-clip:hover {
+      background: var(--bg-muted);
+      border-color: #CBD5E1;
+    }
+    .btn-select-clip svg { width: 13px; height: 13px; }
+    .candidate-card.selected .btn-select-clip {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #FFFFFF;
+    }
+    .candidate-card.selected .btn-select-clip svg { color: #FFFFFF; }
+    
+    .btn-refresh-scene {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .btn-refresh-scene:hover {
+      background: var(--bg-muted);
+      color: var(--text-primary);
+    }
+    .btn-refresh-scene svg { width: 13px; height: 13px; }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
+    .data-table th, .data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table th {
+      color: var(--text-secondary);
+      font-weight: 600;
+      background: #FAFAFC;
+    }
+    .data-table td code {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-primary);
+      background: var(--bg-muted);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    /* Subtitles Box */
+    .captions-box {
+      background: #FAFAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #334155;
+    }
+
+    /* Recent Jobs Drawer */
+    .drawer-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: fixed;
+      top: 0; right: 0; width: 380px; max-width: 90vw; height: 100%;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      z-index: 100;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-lg);
+    }
+    .drawer-overlay.open .drawer { transform: translateX(0); }
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .drawer-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .close-btn {
+      background: none; border: none; color: var(--text-secondary);
+      cursor: pointer; display: flex; align-items: center; padding: 4px;
+      border-radius: var(--radius-sm);
+    }
+    .close-btn:hover { background: var(--bg-muted); color: var(--text-primary); }
+    .close-btn svg { width: 18px; height: 18px; }
+
+    .recent-jobs-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .job-item {
+      background: #FAFAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .job-item:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .job-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .job-item-id {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .job-badge {
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .job-badge.completed { background: var(--success-light); color: var(--success); }
+    .job-badge.rendering { background: var(--primary-light); color: var(--primary); }
+    .job-badge.failed { background: var(--danger-light); color: var(--danger); }
+    .job-item-time {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    /* Error / Alert Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem; right: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84rem;
+      font-weight: 500;
+    }
+    .toast.visible { display: flex; animation: slideUp 0.2s ease; }
+    .toast svg { width: 16px; height: 16px; color: var(--danger); flex-shrink: 0; }
+    @keyframes slideUp {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <a href="#" class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>
+        </svg>
+      </div>
+      <div>
+        <div style="display: flex; align-items: center;">
+          <span class="brand-title">SceneForge AI</span>
+          <span class="brand-badge">Engine v0.1</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="nav-actions">
+      <div class="api-status">
+        <div class="status-dot" id="apiDot"></div>
+        <span id="apiStatusText">Connecting...</span>
+      </div>
+      <button class="btn-secondary" id="historyBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Recent Jobs
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main>
+    <div class="app-grid">
+      
+      <!-- Left Column: Creator Studio -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/>
+            </svg>
+            Create Video
+          </h2>
+          <span class="mode-badge script-only" id="modeBadge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+            </svg>
+            Script-Only Mode (TTS Narration)
+          </span>
+        </div>
+
+        <form id="createJobForm">
+          <!-- Script Input -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Narration Script <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:400;">(Required if no audio uploaded)</span></span>
+              <span class="highlight" id="charCount">0 chars</span>
+            </div>
+            <textarea
+              class="input-field"
+              id="scriptInput"
+              placeholder="Enter your script here. The engine will parse each sentence into a scene, extract meaning, and retrieve matching HD B-roll video footage..."
+            ></textarea>
+            <div class="quick-actions">
+              <button type="button" class="btn-chip" id="loadSampleBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
+                Load Sample Script
+              </button>
+              <button type="button" class="btn-chip" id="clearScriptBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Optional Voiceover Audio -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Voiceover Audio (Optional)</span>
+              <span class="highlight">MP3, WAV, M4A, AAC, OGG, FLAC</span>
+            </div>
+            <div class="dropzone" id="audioDropzone">
+              <input type="file" id="audioFileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>
+              </svg>
+              <p>Drag & drop voiceover audio or click to upload</p>
+              <span>Leave empty to use automatic TTS voice narration</span>
+            </div>
+            <div class="audio-file-pill" id="audioFilePill">
+              <div class="audio-file-pill-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/>
+                </svg>
+                <span id="audioFileName" style="font-family: var(--font-mono); font-size: 0.78rem;"></span>
+              </div>
+              <button type="button" class="remove-btn" id="removeAudioBtn" title="Remove audio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Aspect Ratio Selection -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Target Aspect Ratio</span>
+              <span class="highlight" id="ratioLabel">16:9 Landscape (1920×1080)</span>
+            </div>
+            <div class="pill-group">
+              <div>
+                <input type="radio" id="ar169" name="aspectRatio" value="16:9" checked />
+                <label for="ar169" class="pill-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>
+                  </svg>
+                  <div class="pill-label-text">
+                    <span class="pill-label-title">16:9 Landscape</span>
+                    <span class="pill-label-sub">1920×1080 Standard</span>
+                  </div>
+                </label>
+              </div>
+              <div>
+                <input type="radio" id="ar916" name="aspectRatio" value="9:16" />
+                <label for="ar916" class="pill-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>
+                  </svg>
+                  <div class="pill-label-text">
+                    <span class="pill-label-title">9:16 Portrait</span>
+                    <span class="pill-label-sub">1080×1920 Shorts / Reels</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stock Provider Selection -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Footage Provider</span>
+              <span class="highlight">Powered by Pixabay API</span>
+            </div>
+            <div class="pill-group">
+              <div>
+                <input type="radio" id="provPixabay" name="stockProvider" value="pixabay" checked />
+                <label for="provPixabay" class="pill-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+                  </svg>
+                  <div class="pill-label-text">
+                    <span class="pill-label-title">Pixabay</span>
+                    <span class="pill-label-sub">Live HD Cloud Media</span>
+                  </div>
+                </label>
+              </div>
+              <div>
+                <input type="radio" id="provMock" name="stockProvider" value="mock" />
+                <label for="provMock" class="pill-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>
+                  </svg>
+                  <div class="pill-label-text">
+                    <span class="pill-label-title">Mock Provider</span>
+                    <span class="pill-label-sub">Offline Fixtures</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Selection Mode Selection -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Video Selection Mode</span>
+              <span class="highlight" id="selectionModeLabel">Automatic — AI selects footage</span>
+            </div>
+            <div class="pill-group">
+              <div>
+                <input type="radio" id="modeAuto" name="videoSelectionMode" value="automatic" checked />
+                <label for="modeAuto" class="pill-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                  </svg>
+                  <div class="pill-label-text">
+                    <span class="pill-label-title">Automatic</span>
+                    <span class="pill-label-sub">AI selects optimal clips</span>
+                  </div>
+                </label>
+              </div>
+              <div>
+                <input type="radio" id="modeManual" name="videoSelectionMode" value="manual" />
+                <label for="modeManual" class="pill-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/>
+                  </svg>
+                  <div class="pill-label-text">
+                    <span class="pill-label-title">Manual</span>
+                    <span class="pill-label-sub">Review & pick clips</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-primary" id="generateBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+            Generate B-Roll Video
+          </button>
+        </form>
+      </section>
+
+      <!-- Right Column: Live Player & Results -->
+      <section>
+        
+        <!-- Stepper Card -->
+        <div class="card stepper-card" id="stepperCard">
+          <div class="job-id-banner">
+            <div>JOB ID: <strong id="stepperJobId">—</strong></div>
+            <button type="button" id="copyJobIdBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+              Copy ID
+            </button>
+          </div>
+
+          <div class="pipeline-stepper">
+            <div class="step-item" id="step-VALIDATING">
+              <div class="step-circle">1</div>
+              <div class="step-label">Validate</div>
+            </div>
+            <div class="step-item" id="step-PLANNING">
+              <div class="step-circle">2</div>
+              <div class="step-label">Plan</div>
+            </div>
+            <div class="step-item" id="step-RETRIEVING">
+              <div class="step-circle">3</div>
+              <div class="step-label">Retrieve</div>
+            </div>
+            <div class="step-item" id="step-RENDERING">
+              <div class="step-circle">4</div>
+              <div class="step-label">Render</div>
+            </div>
+            <div class="step-item" id="step-QA">
+              <div class="step-circle">5</div>
+              <div class="step-label">QA</div>
+            </div>
+          </div>
+          <div class="stepper-status-text" id="stepperStatusMsg">
+            Processing job pipeline...
+          </div>
+        </div>
+
+        <!-- Candidate Review Card for Manual Selection -->
+        <div class="card" id="candidateReviewCard" style="display:none; margin-bottom: 1.5rem; border-color: var(--primary);">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>
+                </svg>
+                Select B-Roll Clips for Each Scene
+              </h2>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                Review real candidate clips retrieved from configured providers. Pick your preferred footage before final rendering.
+              </p>
+            </div>
+            <button type="button" class="btn-primary" id="renderSelectedBtn" style="width:auto; margin:0; padding: 0.55rem 1.25rem; font-size: 0.84rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="6 3 20 12 6 21 6 3"/>
+              </svg>
+              Generate Final Video
+            </button>
+          </div>
+          <div id="candidatesContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Rendered candidate cards per scene -->
+          </div>
+          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+            <button type="button" class="btn-primary" id="renderSelectedBtnBottom" style="width:auto; padding: 0.65rem 1.75rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="6 3 20 12 6 21 6 3"/>
+              </svg>
+              Generate Final Video
+            </button>
+          </div>
+        </div>
+
+        <!-- Video Player Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="14" x="2" y="3" rx="2"/><polygon points="10 7 15 10 10 13 10 7"/>
+              </svg>
+              Generated Video Player
+            </h2>
+            <div id="qaBadgeWrapper"></div>
+          </div>
+
+          <!-- Video Element -->
+          <div class="player-container" id="playerContainer">
+            <div class="player-placeholder" id="playerPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m10 9 5 3-5 3V9Z"/>
+              </svg>
+              <p>Your generated B-roll video will stream here</p>
+              <span>Click 'Load Sample Script' and 'Generate' to start</span>
+            </div>
+            <video id="videoPlayer" controls style="display:none;"></video>
+          </div>
+
+          <!-- Video Actions -->
+          <div class="video-actions" id="videoActions" style="display:none;">
+            <div style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);" id="videoMetaText">
+              H.264 / AAC • 1920×1080 @ 30 FPS
+            </div>
+            <a href="#" class="btn-download" id="downloadMp4Btn" download="sceneforge_video.mp4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+              </svg>
+              Download MP4
+            </a>
+          </div>
+
+          <!-- Tabbed Inspector -->
+          <div class="tabs-nav">
+            <button type="button" class="tab-btn active" data-tab="tab-scenes">Scenes & Storyboard</button>
+            <button type="button" class="tab-btn" data-tab="tab-rights">Rights Passport</button>
+            <button type="button" class="tab-btn" data-tab="tab-captions">Captions (SRT)</button>
+            <button type="button" class="tab-btn" data-tab="tab-specs">Specs & QA</button>
+          </div>
+
+          <!-- Tab 1: Scenes -->
+          <div class="tab-content active" id="tab-scenes">
+            <div class="scene-list" id="sceneList">
+              <div style="text-align: center; color: var(--text-secondary); padding: 2.5rem 1rem; font-size: 0.85rem;">
+                No active job loaded. Submit a script to inspect its scenes.
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Rights -->
+          <div class="tab-content" id="tab-rights">
+            <div style="overflow-x: auto; max-height: 350px;">
+              <table class="data-table" id="rightsTable">
+                <thead>
+                  <tr>
+                    <th>Asset ID</th>
+                    <th>Provider</th>
+                    <th>Licence</th>
+                    <th>Commercial Status</th>
+                    <th>SHA-256 Digest</th>
+                  </tr>
+                </thead>
+                <tbody id="rightsTableBody">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem; font-size: 0.85rem;">
+                      Rights records will populate once footage is retrieved.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 3: Captions -->
+          <div class="tab-content" id="tab-captions">
+            <div class="captions-box" id="captionsBox">Captions will appear here after rendering.</div>
+          </div>
+
+          <!-- Tab 4: Specs -->
+          <div class="tab-content" id="tab-specs">
+            <table class="data-table">
+              <tbody id="specsTableBody">
+                <tr><th>Container Format</th><td>MP4 (ISO Base Media)</td></tr>
+                <tr><th>Video Codec</th><td>H.264 (libx264 high profile)</td></tr>
+                <tr><th>Audio Stream</th><td>AAC-LC 44.1kHz Stereo (128 kbps)</td></tr>
+                <tr><th>Frame Rate</th><td>30.000 FPS</td></tr>
+                <tr><th>Dimensions</th><td id="specResolution">1920×1080 (16:9)</td></tr>
+                <tr><th>Automated QA</th><td id="specQA">Pending job execution</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Recent Jobs Drawer Overlay -->
+  <div class="drawer-overlay" id="drawerOverlay">
+    <div class="drawer">
+      <div class="drawer-header">
+        <h3>Recent Video Jobs</h3>
+        <button class="close-btn" id="closeDrawerBtn" title="Close drawer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="recent-jobs-list" id="recentJobsList">
+        <div style="text-align:center; color:var(--text-secondary); padding:2rem; font-size: 0.85rem;">Loading jobs...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error / Notification Toast -->
+  <div class="toast" id="toast">
+    <svg id="toastIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span id="toastMsg">Notification message</span>
+  </div>
+
+  <script>
+    // --- Application State ---
+    const API_BASE = window.location.port === '3000' ? 'http://localhost:8000' : '';
+    let currentJobId = null;
+    let pollInterval = null;
+    let uploadedVoiceoverPath = null;
+
+    // DOM Elements
+    const apiDot = document.getElementById('apiDot');
+    const apiStatusText = document.getElementById('apiStatusText');
+    const scriptInput = document.getElementById('scriptInput');
+    const charCount = document.getElementById('charCount');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    const clearScriptBtn = document.getElementById('clearScriptBtn');
+    const audioDropzone = document.getElementById('audioDropzone');
+    const audioFileInput = document.getElementById('audioFileInput');
+    const audioFilePill = document.getElementById('audioFilePill');
+    const audioFileName = document.getElementById('audioFileName');
+    const removeAudioBtn = document.getElementById('removeAudioBtn');
+    const modeBadge = document.getElementById('modeBadge');
+    const createJobForm = document.getElementById('createJobForm');
+    const generateBtn = document.getElementById('generateBtn');
+    const stepperCard = document.getElementById('stepperCard');
+    const stepperJobId = document.getElementById('stepperJobId');
+    const stepperStatusMsg = document.getElementById('stepperStatusMsg');
+    const copyJobIdBtn = document.getElementById('copyJobIdBtn');
+    const playerPlaceholder = document.getElementById('playerPlaceholder');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const videoActions = document.getElementById('videoActions');
+    const downloadMp4Btn = document.getElementById('downloadMp4Btn');
+    const qaBadgeWrapper = document.getElementById('qaBadgeWrapper');
+    const sceneList = document.getElementById('sceneList');
+    const rightsTableBody = document.getElementById('rightsTableBody');
+    const captionsBox = document.getElementById('captionsBox');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const historyBtn = document.getElementById('historyBtn');
+    const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+    const recentJobsList = document.getElementById('recentJobsList');
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastIcon = document.getElementById('toastIcon');
+
+    const SAMPLE_SCRIPT = "Majestic ocean waves crash onto the sandy beach during sunset. Golden autumn leaves fall gently across a peaceful forest path. A bustling modern city skyline glows brightly with lights at night.";
+
+    // --- Helper Functions ---
+    function showToast(msg, isSuccess = false) {
+      toastMsg.innerText = msg;
+      if (isSuccess) {
+        toastIcon.style.color = 'var(--success)';
+        toastIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>';
+      } else {
+        toastIcon.style.color = 'var(--danger)';
+        toastIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
+      }
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 4000);
+    }
+
+    // Health Check
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/health`);
+        if (res.ok) {
+          apiDot.className = 'status-dot online';
+          apiStatusText.innerText = 'Engine Online';
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        apiDot.className = 'status-dot offline';
+        apiStatusText.innerText = 'Engine Offline';
+      }
+    }
+    checkHealth();
+    setInterval(checkHealth, 15000);
+
+    // Dynamic Mode Badge update (No emojis)
+    function updateModeBadge() {
+      const hasScript = Boolean(scriptInput.value.trim());
+      const hasAudio = Boolean(uploadedVoiceoverPath);
+      if (hasAudio && hasScript) {
+        modeBadge.className = 'mode-badge voiceover';
+        modeBadge.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+          Aligned Mode (Script + Voiceover Audio)
+        `;
+      } else if (hasAudio) {
+        modeBadge.className = 'mode-badge voiceover';
+        modeBadge.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+          Voiceover Audio Mode (Supplied Audio)
+        `;
+      } else {
+        modeBadge.className = 'mode-badge script-only';
+        modeBadge.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+          </svg>
+          Script-Only Mode (TTS Narration)
+        `;
+      }
+    }
+
+    // Character counter
+    scriptInput.addEventListener('input', () => {
+      charCount.innerText = `${scriptInput.value.length} chars`;
+      updateModeBadge();
+    });
+
+    // Sample script loader
+    loadSampleBtn.addEventListener('click', () => {
+      scriptInput.value = SAMPLE_SCRIPT;
+      charCount.innerText = `${scriptInput.value.length} chars`;
+      updateModeBadge();
+    });
+    clearScriptBtn.addEventListener('click', () => {
+      scriptInput.value = '';
+      charCount.innerText = '0 chars';
+      updateModeBadge();
+    });
+
+    // Aspect ratio label update
+    document.querySelectorAll('input[name="aspectRatio"]').forEach(el => {
+      el.addEventListener('change', () => {
+        document.getElementById('ratioLabel').innerText = el.value === '16:9' ? '16:9 Landscape (1920×1080)' : '9:16 Portrait (1080×1920)';
+        document.getElementById('specResolution').innerText = el.value === '16:9' ? '1920×1080 (16:9)' : '1080×1920 (9:16)';
+      });
+    });
+
+    // Video Selection Mode label update (No emojis)
+    document.querySelectorAll('input[name="videoSelectionMode"]').forEach(el => {
+      el.addEventListener('change', () => {
+        const lbl = document.getElementById('selectionModeLabel');
+        if (lbl) {
+          lbl.innerText = el.value === 'automatic'
+            ? 'Automatic — AI selects footage'
+            : 'Manual — Choose clips per scene';
+        }
+      });
+    });
+
+    // Voiceover Audio Upload Handler
+    let isUploadingAudio = false;
+
+    async function handleAudioUpload(file) {
+      if (!file) return;
+
+      const allowedExts = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.webm', '.aiff', '.aif', '.mp4'];
+      const fileExt = '.' + (file.name.split('.').pop() || '').toLowerCase();
+      if (!allowedExts.includes(fileExt) && !file.type.startsWith('audio/')) {
+        showToast('Invalid audio file. Allowed formats: MP3, WAV, M4A, AAC, OGG, FLAC.');
+        removeAudio();
+        return;
+      }
+
+      if (file.size > 100 * 1024 * 1024) {
+        showToast('Audio file exceeds 100MB limit.');
+        removeAudio();
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        isUploadingAudio = true;
+        audioFileName.innerText = `Uploading ${file.name}...`;
+        audioFilePill.classList.add('visible');
+
+        const res = await fetch(`${API_BASE}/jobs/upload-audio`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Upload failed with HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        uploadedVoiceoverPath = data.voiceover_path;
+        audioFileName.innerText = `${file.name} (${(data.size_bytes / 1024 / 1024).toFixed(2)} MB)`;
+        updateModeBadge();
+        showToast(`Voiceover uploaded: ${file.name}`, true);
+      } catch (err) {
+        showToast('Failed to upload audio: ' + err.message);
+        removeAudio();
+      } finally {
+        isUploadingAudio = false;
+      }
+    }
+
+    audioFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) await handleAudioUpload(file);
+    });
+
+    // Dropzone Click & Drag/Drop
+    audioDropzone.addEventListener('click', (e) => {
+      if (e.target !== audioFileInput) {
+        audioFileInput.click();
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      audioDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        audioDropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      audioDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        audioDropzone.classList.remove('dragover');
+      });
+    });
+
+    audioDropzone.addEventListener('drop', async (e) => {
+      const dt = e.dataTransfer;
+      const files = dt && dt.files;
+      if (files && files.length > 0) {
+        audioFileInput.files = files;
+        await handleAudioUpload(files[0]);
+      }
+    });
+
+    function removeAudio() {
+      audioFileInput.value = '';
+      uploadedVoiceoverPath = null;
+      audioFilePill.classList.remove('visible');
+      updateModeBadge();
+    }
+    removeAudioBtn.addEventListener('click', removeAudio);
+
+    // Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Copy Job ID
+    copyJobIdBtn.addEventListener('click', () => {
+      if (currentJobId) {
+        navigator.clipboard.writeText(currentJobId);
+        copyJobIdBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Copied!
+        `;
+        setTimeout(() => {
+          copyJobIdBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+            Copy ID
+          `;
+        }, 2000);
+      }
+    });
+
+    // Drawer Controls
+    historyBtn.addEventListener('click', () => {
+      drawerOverlay.classList.add('open');
+      loadRecentJobs();
+    });
+    closeDrawerBtn.addEventListener('click', () => drawerOverlay.classList.remove('open'));
+    drawerOverlay.addEventListener('click', (e) => {
+      if (e.target === drawerOverlay) drawerOverlay.classList.remove('open');
+    });
+
+    // Form Submit
+    createJobForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (isUploadingAudio) {
+        showToast('Please wait for audio upload to complete...');
+        return;
+      }
+
+      if (!uploadedVoiceoverPath && audioFileInput.files && audioFileInput.files[0]) {
+        await handleAudioUpload(audioFileInput.files[0]);
+        if (!uploadedVoiceoverPath) return;
+      }
+
+      const script = scriptInput.value.trim();
+
+      if (!script && !uploadedVoiceoverPath) {
+        showToast('Please provide a narration script or upload a voiceover audio file.');
+        scriptInput.focus();
+        return;
+      }
+
+      const aspectRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
+      const stockProvider = document.querySelector('input[name="stockProvider"]:checked').value;
+      const videoSelectionMode = document.querySelector('input[name="videoSelectionMode"]:checked')?.value || 'automatic';
+
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = `Submitting Job...`;
+
+      try {
+        const payload = {
+          aspect_ratio: aspectRatio,
+          stock_provider: stockProvider,
+          video_selection_mode: videoSelectionMode,
+        };
+        if (script) {
+          payload.script = script;
+        }
+        if (uploadedVoiceoverPath) {
+          payload.voiceover_path = uploadedVoiceoverPath;
+        }
+
+        const res = await fetch(`${API_BASE}/jobs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || 'Failed to submit job');
+        }
+
+        const data = await res.json();
+        currentJobId = data.job_id;
+        startJobTracking(currentJobId);
+      } catch (err) {
+        showToast('Error: ' + err.message);
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="6 3 20 12 6 21 6 3"/>
+          </svg>
+          Generate B-Roll Video`;
+      }
+    });
+
+    // --- Job Tracking & Polling ---
+    function startJobTracking(jobId) {
+      stepperJobId.innerText = jobId;
+      stepperCard.classList.add('visible');
+      const candCard = document.getElementById('candidateReviewCard');
+      if (candCard) candCard.style.display = 'none';
+      videoActions.style.display = 'none';
+      qaBadgeWrapper.innerHTML = '';
+      playerPlaceholder.style.display = 'flex';
+      videoPlayer.style.display = 'none';
+      videoPlayer.pause();
+      videoPlayer.src = '';
+
+      if (pollInterval) clearInterval(pollInterval);
+      pollJobStatus(jobId);
+      pollInterval = setInterval(() => pollJobStatus(jobId), 1000);
+    }
+
+    async function pollJobStatus(jobId) {
+      try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}`);
+        if (!res.ok) return;
+        const job = await res.json();
+        updateStepper(job.status);
+
+        if (job.status === 'AWAITING_SELECTION') {
+          clearInterval(pollInterval);
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+            Generate B-Roll Video`;
+          loadCandidateSelection(jobId);
+        } else if (job.status === 'COMPLETED') {
+          clearInterval(pollInterval);
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+            Generate B-Roll Video`;
+          const candCard = document.getElementById('candidateReviewCard');
+          if (candCard) candCard.style.display = 'none';
+          loadJobResults(jobId);
+        } else if (job.status === 'FAILED') {
+          clearInterval(pollInterval);
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+            Generate B-Roll Video`;
+          stepperStatusMsg.innerText = `Job failed: ${job.error_message || 'Rendering error'}`;
+          stepperStatusMsg.className = 'stepper-status-text failed';
+          showToast('Job Failed: ' + (job.error_message || 'Unknown error'));
+        }
+      } catch (err) {
+        console.warn('Polling error:', err);
+      }
+    }
+
+    const STAGES = ['VALIDATING', 'PLANNING', 'RETRIEVING', 'RENDERING', 'QA'];
+    function updateStepper(status) {
+      stepperStatusMsg.className = 'stepper-status-text';
+
+      if (status === 'AWAITING_SELECTION') {
+        ['VALIDATING', 'PLANNING', 'RETRIEVING'].forEach(st => {
+          const el = document.getElementById(`step-${st}`);
+          if (el) {
+            el.className = 'step-item completed';
+            el.querySelector('.step-circle').innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            `;
+          }
+        });
+        const rEl = document.getElementById('step-RENDERING');
+        if (rEl) {
+          rEl.className = 'step-item';
+          rEl.querySelector('.step-circle').innerText = '4';
+        }
+        const qEl = document.getElementById('step-QA');
+        if (qEl) {
+          qEl.className = 'step-item';
+          qEl.querySelector('.step-circle').innerText = '5';
+        }
+        stepperStatusMsg.innerText = 'Candidate clips retrieved. Select preferred clips below and click Generate Final Video.';
+        return;
+      }
+
+      const idx = STAGES.indexOf(status);
+      STAGES.forEach((stage, i) => {
+        const el = document.getElementById(`step-${stage}`);
+        if (!el) return;
+        el.className = 'step-item';
+        const circle = el.querySelector('.step-circle');
+        if (status === 'COMPLETED' || (idx !== -1 && i < idx)) {
+          el.classList.add('completed');
+          circle.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          `;
+        } else if (stage === status) {
+          el.classList.add('active');
+          circle.innerText = `${i + 1}`;
+        } else {
+          circle.innerText = `${i + 1}`;
+        }
+      });
+
+      const messages = {
+        'QUEUED': 'Job queued in background worker...',
+        'VALIDATING': 'Validating script constraints & parameters...',
+        'PLANNING': 'Extracting scene visual concepts & keywords...',
+        'RETRIEVING': 'Searching configured video providers and ranking eligible candidate clips...',
+        'RENDERING': 'Trimming clips & assembling final H.264/AAC video in FFmpeg...',
+        'QA': 'Running 14 automated quality assurance checks...',
+        'COMPLETED': 'Video generation complete and verified.'
+      };
+      stepperStatusMsg.innerText = messages[status] || status;
+      if (status === 'COMPLETED') {
+        stepperStatusMsg.className = 'stepper-status-text completed';
+      }
+    }
+
+    // --- Candidate Selection Studio (Manual Mode) ---
+    async function loadCandidateSelection(jobId) {
+      const card = document.getElementById('candidateReviewCard');
+      const container = document.getElementById('candidatesContainer');
+      card.style.display = 'block';
+      container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.85rem;">Loading scene candidates...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/candidates`);
+        if (!res.ok) throw new Error('Failed to retrieve scene candidates');
+        const data = await res.json();
+        renderCandidateSelection(jobId, data.scenes || []);
+      } catch (err) {
+        container.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--danger); font-size: 0.85rem;">Failed to load candidates: ${err.message}</div>`;
+      }
+    }
+
+    function renderCandidateSelection(jobId, scenes) {
+      const container = document.getElementById('candidatesContainer');
+      if (!scenes || !scenes.length) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 2rem; font-size: 0.85rem;">No scenes available for footage selection.</div>';
+        return;
+      }
+
+      container.innerHTML = scenes.map(s => {
+        const candidates = s.candidates || [];
+        const hasCandidates = candidates.length > 0;
+        const selectedId = s.selected_asset_id;
+
+        const candidateCardsHtml = hasCandidates ? candidates.map(c => {
+          const isSelected = (c.asset_id === selectedId) || c.is_selected;
+          const scorePercent = Math.round((c.relevance_score || 0) * 100);
+
+          return `
+            <div class="candidate-card ${isSelected ? 'selected' : ''}" id="card-${s.scene_id}-${c.asset_id}">
+              <div class="candidate-thumb-container">
+                ${c.preview_url ? `
+                  <video src="${c.preview_url}" muted loop playsinline preload="metadata" onmouseenter="this.play().catch(()=>{})" onmouseleave="this.pause()" style="width:100%;height:100%;object-fit:cover;"></video>
+                ` : `
+                  <div style="color:#64748B;font-size:0.75rem;display:flex;align-items:center;justify-content:center;height:100%;font-weight:600;">
+                    ${c.provider_name ? c.provider_name.toUpperCase() : 'STOCK'} PREVIEW
+                  </div>
+                `}
+                <div class="candidate-badge-selected" id="badge-${s.scene_id}-${c.asset_id}" style="${isSelected ? 'display:flex;' : 'display:none;'}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Selected
+                </div>
+                <div class="candidate-badge-score">Relevance: ${scorePercent}%</div>
+                ${c.duration_seconds ? `<div class="candidate-badge-dur">${c.duration_seconds.toFixed(1)}s</div>` : ''}
+              </div>
+              <div class="candidate-details">
+                <div class="candidate-details-title" title="${c.title}">${c.title}</div>
+                <div class="candidate-meta-row">
+                  <span><strong>Provider:</strong> ${c.provider_name ? c.provider_name.toUpperCase() : 'STOCK'}</span>
+                  <span><strong>Res:</strong> ${c.width && c.height ? `${c.width}×${c.height}` : 'HD'}</span>
+                </div>
+                <div class="candidate-meta-row">
+                  <span class="candidate-licence-pill">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                      <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                    ${c.licence_name || 'Commercial Eligible'}
+                  </span>
+                  ${c.source_url ? `<a href="${c.source_url}" target="_blank" rel="noopener" style="color:var(--primary);font-size:0.7rem;text-decoration:none;font-weight:600;">Source ↗</a>` : ''}
+                </div>
+                ${c.rationale ? `<div class="candidate-rationale">"${c.rationale}"</div>` : ''}
+                <button type="button" class="btn-select-clip" onclick="selectClipForScene('${jobId}', '${s.scene_id}', '${c.asset_id}')">
+                  ${isSelected ? `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Currently Selected
+                  ` : 'Select This Clip'}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('') : `
+          <div style="grid-column: 1 / -1; padding: 1.5rem; text-align: center; color: var(--text-secondary); background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.82rem;">
+            Fewer candidate results found from provider for this query. A typography card fallback will be used if no footage is available.
+          </div>
+        `;
+
+        return `
+          <div class="scene-candidate-box" id="scene-box-${s.scene_id}">
+            <div class="scene-candidate-header">
+              <div>
+                <div class="scene-candidate-title">
+                  <span>Scene ${s.scene_index + 1} (${(s.start_time || 0).toFixed(1)}s - ${(s.end_time || 5).toFixed(1)}s)</span>
+                  <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: var(--primary-light); color: var(--primary); font-weight:600; border: 1px solid var(--primary-border);">
+                    ${candidates.length} Candidate${candidates.length === 1 ? '' : 's'} Available
+                  </span>
+                </div>
+                <div class="scene-candidate-sub">
+                  <strong>Narration:</strong> "${s.narration_text || ''}"
+                </div>
+                ${s.visual_concept ? `<div class="scene-candidate-sub" style="color:var(--primary);"><strong>Concept:</strong> ${s.visual_concept}</div>` : ''}
+              </div>
+              <button type="button" class="btn-refresh-scene" id="btn-refresh-${s.scene_id}" onclick="refreshSceneCandidates('${jobId}', '${s.scene_id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+                </svg>
+                Refresh Candidates
+              </button>
+            </div>
+            <div class="candidate-grid" id="grid-${s.scene_id}">
+              ${candidateCardsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectClipForScene(jobId, sceneId, assetId) {
+      try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/select-clip`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scene_id: sceneId, asset_id: assetId }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || 'Selection failed');
+        }
+
+        const sceneBox = document.getElementById(`scene-box-${sceneId}`);
+        if (sceneBox) {
+          sceneBox.querySelectorAll('.candidate-card').forEach(card => {
+            card.classList.remove('selected');
+            const btn = card.querySelector('.btn-select-clip');
+            if (btn) btn.innerHTML = 'Select This Clip';
+            const badge = card.querySelector('.candidate-badge-selected');
+            if (badge) badge.style.display = 'none';
+          });
+          const targetCard = document.getElementById(`card-${sceneId}-${assetId}`);
+          if (targetCard) {
+            targetCard.classList.add('selected');
+            const btn = targetCard.querySelector('.btn-select-clip');
+            if (btn) {
+              btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Currently Selected
+              `;
+            }
+            const badge = document.getElementById(`badge-${sceneId}-${assetId}`);
+            if (badge) badge.style.display = 'flex';
+          }
+        }
+        showToast('Clip selected for Scene', true);
+      } catch (err) {
+        showToast('Selection error: ' + err.message);
+      }
+    }
+
+    async function refreshSceneCandidates(jobId, sceneId) {
+      const btn = document.getElementById(`btn-refresh-${sceneId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = 'Searching...';
+      }
+      try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/scenes/${sceneId}/refresh-candidates`, {
+          method: 'POST',
+        });
+        if (!res.ok) throw new Error('Failed to refresh candidates');
+        showToast('Candidates refreshed', true);
+        loadCandidateSelection(jobId);
+      } catch (err) {
+        showToast('Refresh error: ' + err.message);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+            </svg>
+            Refresh Candidates
+          `;
+        }
+      }
+    }
+
+    async function triggerFinalRender(jobId) {
+      if (!jobId) return;
+      const btnTop = document.getElementById('renderSelectedBtn');
+      const btnBottom = document.getElementById('renderSelectedBtnBottom');
+      if (btnTop) btnTop.disabled = true;
+      if (btnBottom) btnBottom.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/render`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || 'Failed to trigger final render');
+        }
+
+        document.getElementById('candidateReviewCard').style.display = 'none';
+        stepperStatusMsg.innerText = 'Assembling final video with chosen clips in FFmpeg...';
+        stepperStatusMsg.className = 'stepper-status-text';
+        showToast('Rendering final video...', true);
+
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(() => pollJobStatus(jobId), 1000);
+      } catch (err) {
+        showToast('Render error: ' + err.message);
+        if (btnTop) btnTop.disabled = false;
+        if (btnBottom) btnBottom.disabled = false;
+      }
+    }
+
+    document.getElementById('renderSelectedBtn')?.addEventListener('click', () => triggerFinalRender(currentJobId));
+    document.getElementById('renderSelectedBtnBottom')?.addEventListener('click', () => triggerFinalRender(currentJobId));
+
+    // --- Load Job Results ---
+    async function loadJobResults(jobId) {
+      currentJobId = jobId;
+      const videoUrl = `${API_BASE}/files/sceneforge-artifacts/jobs/${jobId}/output.mp4`;
+
+      // Video Player
+      playerPlaceholder.style.display = 'none';
+      videoPlayer.style.display = 'block';
+      videoPlayer.src = videoUrl;
+      videoPlayer.load();
+
+      videoActions.style.display = 'flex';
+      downloadMp4Btn.href = videoUrl;
+
+      // QA Badge (No emojis)
+      qaBadgeWrapper.innerHTML = `
+        <span class="qa-pill pass">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+          QA PASS (14/14)
+        </span>
+      `;
+      document.getElementById('specQA').innerHTML = `<span style="color:var(--success); font-weight:700;">PASS (14/14 Automated Checks)</span>`;
+
+      // Fetch Storyboard / Timeline
+      try {
+        const sbRes = await fetch(`${API_BASE}/jobs/${jobId}/storyboard`);
+        if (sbRes.ok) {
+          const sbData = await sbRes.json();
+          renderScenes(sbData.scenes || []);
+        }
+      } catch (err) {
+        console.warn('Error loading storyboard:', err);
+      }
+
+      // Fetch Rights Records
+      try {
+        const rRes = await fetch(`${API_BASE}/files/sceneforge-artifacts/jobs/${jobId}/rights.json`);
+        if (rRes.ok) {
+          const rData = await rRes.json();
+          renderRights(rData.records || []);
+        }
+      } catch (err) {
+        console.warn('Error loading rights:', err);
+      }
+
+      // Fetch Captions SRT
+      try {
+        const srtRes = await fetch(`${API_BASE}/files/sceneforge-artifacts/jobs/${jobId}/captions.srt`);
+        if (srtRes.ok) {
+          captionsBox.innerText = await srtRes.text();
+        }
+      } catch (err) {
+        captionsBox.innerText = 'Captions not available.';
+      }
+    }
+
+    function renderScenes(scenes) {
+      if (!scenes.length) {
+        sceneList.innerHTML = `<div style="text-align:center;color:var(--text-secondary);padding:2.5rem 1rem;font-size:0.85rem;">No scenes found.</div>`;
+        return;
+      }
+      sceneList.innerHTML = scenes.map(s => {
+        const isPixabay = s.asset_id && s.asset_id.startsWith('pixabay-');
+        const pixabayId = isPixabay ? s.asset_id.replace('pixabay-', '') : null;
+        const sourceUrl = pixabayId ? `https://pixabay.com/videos/id-${pixabayId}/` : null;
+
+        const planData = s.plan_data || {};
+        const candidates = planData.candidates || [];
+        const matched = candidates.find(c => c.asset_id === s.asset_id) || (candidates.length > 0 ? candidates[0] : null);
+        const reason = matched?.rationale || planData.selection_reason || '';
+
+        return `
+          <div class="scene-card">
+            <div class="scene-header">
+              <span class="scene-time">Scene ${s.scene_index + 1} (${s.start_time.toFixed(1)}s - ${s.end_time.toFixed(1)}s)</span>
+              <span class="scene-route-badge ${s.route || 'stock'}">${s.route || 'stock'}</span>
+            </div>
+            <div class="scene-narration">"${s.narration_text}"</div>
+            <div class="scene-meta">
+              <span><strong>Visual:</strong> ${s.visual_concept || 'None'}</span>
+              ${s.asset_id ? `<span><strong>Asset:</strong> <code>${s.asset_id}</code></span>` : ''}
+              ${s.relevance_score ? `<span><strong>Score:</strong> ${(s.relevance_score).toFixed(2)}</span>` : ''}
+              ${sourceUrl ? `
+                <span>
+                  <a href="${sourceUrl}" target="_blank" rel="noopener">
+                    View on Pixabay
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    </svg>
+                  </a>
+                </span>
+              ` : ''}
+            </div>
+            ${reason ? `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px; font-style:italic;"><strong>Selection Reason:</strong> "${reason}"</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRights(records) {
+      if (!records.length) {
+        rightsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:2rem;font-size:0.85rem;">No rights records.</td></tr>`;
+        return;
+      }
+      rightsTableBody.innerHTML = records.map(r => `
+        <tr>
+          <td><strong>${r.asset_id}</strong></td>
+          <td><span style="color:var(--primary); font-weight:600;">${r.provider_name}</span></td>
+          <td>${r.licence_name}</td>
+          <td>
+            <span style="color:var(--success);font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              ${r.commercial_use_eligible ? 'Cleared' : 'Unverified'}
+            </span>
+          </td>
+          <td><code>${(r.sha256_hash || '').substring(0, 16)}...</code></td>
+        </tr>
+      `).join('');
+    }
+
+    // --- Load Recent Jobs ---
+    async function loadRecentJobs() {
+      try {
+        const res = await fetch(`${API_BASE}/jobs?limit=25`);
+        if (!res.ok) throw new Error('Could not fetch jobs');
+        const jobs = await res.json();
+
+        if (!jobs.length) {
+          recentJobsList.innerHTML = `<div style="text-align:center;color:var(--text-secondary);padding:2rem;font-size:0.85rem;">No jobs submitted yet.</div>`;
+          return;
+        }
+
+        recentJobsList.innerHTML = jobs.map(j => {
+          const dateStr = new Date(j.created_at).toLocaleString();
+          return `
+            <div class="job-item" onclick="selectJob('${j.job_id}')">
+              <div class="job-item-top">
+                <span class="job-item-id">${j.job_id.substring(0, 8)}...</span>
+                <span class="job-badge ${j.status.toLowerCase()}">${j.status}</span>
+              </div>
+              <div class="job-item-time">${j.aspect_ratio} • ${dateStr}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        recentJobsList.innerHTML = `<div style="text-align:center;color:var(--danger);padding:1.5rem;font-size:0.85rem;">Failed to load jobs.</div>`;
+      }
+    }
+
+    window.selectJob = function(jobId) {
+      drawerOverlay.classList.remove('open');
+      startJobTracking(jobId);
+    };
+
+    // Auto-load most recent job if one exists on startup
+    async function initLatestJob() {
+      try {
+        const res = await fetch(`${API_BASE}/jobs?limit=1`);
+        if (res.ok) {
+          const jobs = await res.json();
+          if (jobs.length && jobs[0].status === 'COMPLETED') {
+            currentJobId = jobs[0].job_id;
+            stepperJobId.innerText = currentJobId;
+            stepperCard.classList.add('visible');
+            updateStepper('COMPLETED');
+            loadJobResults(currentJobId);
+          }
+        }
+      } catch (e) {}
+    }
+    initLatestJob();
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "basic-text-only",
+    "script": "Innovation drives progress every single day of the week.",
+    "aspect_ratio": "16:9",
+    "tts_adapter": "mock",
+    "stock_provider": "mock",
+    "expected_status": "COMPLETED"
+  },
+  {
+    "id": "abstract-concept",
+    "script": "Trust and integrity take time to develop and sustain for the future.",
+    "aspect_ratio": "16:9",
+    "tts_adapter": "mock",
+    "stock_provider": "mock",
+    "expected_status": "COMPLETED"
+  },
+  {
+    "id": "numeric-claim",
+    "script": "Our revenue grew by 25% in the year 2024 according to the latest data.",
+    "aspect_ratio": "16:9",
+    "tts_adapter": "mock",
+    "stock_provider": "mock",
+    "expected_status": "COMPLETED"
+  },
+  {
+    "id": "portrait-mode",
+    "script": "The future of technology depends on people working together with purpose.",
+    "aspect_ratio": "9:16",
+    "tts_adapter": "mock",
+    "stock_provider": "mock",
+    "expected_status": "COMPLETED"
+  },
+  {
+    "id": "empty-script",
+    "script": "",
+    "aspect_ratio": "16:9",
+    "tts_adapter": "mock",
+    "expected_status": "FAILED"
+  }
+]

@@ -1,0 +1,84 @@
+Phase 5 — End-to-End Milestone Evidence
+========================================
+Date: 2026-10-20
+Job ID: 32c19c79-0cc5-402b-ae57-57d1bd1d12ed
+Status: COMPLETED
+
+Script submitted:
+  "Innovation drives progress. Every great idea starts with a single step. Trust takes time to build."
+
+Config:
+  tts_adapter: mock  (edge_tts blocked: 403 on wss://speech.platform.bing.com from this network)
+  stock_provider: mock
+  aspect_ratio: 16:9
+
+Pipeline stages completed:
+  QUEUED → VALIDATING → PLANNING → RETRIEVING → RENDERING → QA → COMPLETED
+  Stage timings: validate=73ms, plan=476ms, retrieve=360ms, render=2537ms, QA=275ms
+
+Artifacts produced (all 7):
+  output.mp4     44,218 bytes
+  timeline.json
+  manifest.json
+  rights.json
+  captions.srt
+  metrics.json
+  job.log
+
+FFprobe verification (run inside worker container):
+  Container:     mov,mp4,m4a,3gp,3g2,mj2  → PASS
+  Video codec:   h264 (High Profile L4.0) → PASS
+  Audio codec:   aac (LC)                 → PASS
+  Frame rate:    30/1 fps                 → PASS
+  Dimensions:    1920x1080                → PASS
+  Pixel format:  yuv420p                  → PASS
+  Duration:      6.70s                    → PASS
+  Aspect ratio:  16:9 (display)           → PASS
+  File size:     44,218 bytes             → PASS
+
+QA checker (14 checks):
+  file_exists:       PASS
+  file_nonempty:     PASS  (44218 bytes)
+  ffprobe_available: PASS
+  container:         PASS
+  video_codec:       PASS  (h264)
+  audio_codec:       PASS  (aac)
+  frame_rate:        PASS  (30.00 fps)
+  dimensions:        PASS  (1920x1080)
+  duration:          PASS  (6.70s)
+  audio_present:     SKIPPED (require_audio=False for this job)
+  pixel_format:      PASS  (yuv420p)
+  subtitles:         PASS  (valid SRT)
+  rights_coverage:   SKIPPED (timeline not passed)
+  duplicate_scenes:  SKIPPED (timeline not passed)
+  OVERALL: PASS
+
+manifest.json key fields:
+  real_mp4_rendered: true
+  ffmpeg_available: true
+  render_profile: 1920x1080@30fps
+  tts_adapter: mock
+  tts_is_mock: true
+
+rights.json:
+  3 records, all programmatic cards
+  commercial_use_eligible: true for all
+
+Honest limitations:
+  - TTS: mock (silent WAV) — edge_tts 403 on this network; fallback correct
+  - Stock footage: mock — no Pexels/Pixabay API keys configured
+  - Scene segments: all 3 rendered as programmatic typography cards
+    (real stock video download not yet implemented; Phase 6)
+  - Captions: placeholder text (old code path); real captions from rule-based
+    planner will populate in Phase 6 once captions pass through the full timeline
+
+Infrastructure resolved:
+  - Debian apt blocked → FFmpeg static binary from GitHub
+  - MinIO Docker Hub blocked → Filesystem storage backend
+  - S3Mock PUT closed → Filesystem storage backend
+  - edge_tts 403 → graceful fallback to mock
+  - SQLAlchemy detached instance × 4 → snapshotted to dicts before session close
+  - drawtext font missing → Roboto-Regular.ttf downloaded at runtime
+
+No-key test suite: 449/449 PASS (exit 0)
+Command: python run_phase5.py

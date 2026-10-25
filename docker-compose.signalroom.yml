@@ -1,0 +1,41 @@
+services:
+  signalroom-backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.signalroom.backend
+    container_name: signalroom-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - DEMO_MODE=true
+      - DATABASE_URL=sqlite:////app/storage/signalroom.db
+      - ARTIFACT_STORAGE_PATH=/app/storage/evidence
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=console
+    volumes:
+      - signalroom_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  signalroom-frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.signalroom.frontend
+    container_name: signalroom-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - signalroom-backend
+
+volumes:
+  signalroom_storage:
+    driver: local

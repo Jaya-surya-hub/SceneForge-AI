@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sceneforge.ai/schemas/manifest.schema.json",
+  "title": "SceneForge Manifest",
+  "description": "Job metadata and artifact manifest for a completed SceneForge job.",
+  "type": "object",
+  "required": ["job_id", "completed_at", "artifacts"],
+  "properties": {
+    "job_id": { "type": "string" },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time" },
+    "api_version": { "type": "string" },
+    "aspect_ratio": {
+      "type": "string",
+      "enum": ["16:9", "9:16"]
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "output_format": {
+      "type": "object",
+      "properties": {
+        "container": { "type": "string" },
+        "video_codec": { "type": "string" },
+        "audio_codec": { "type": "string" },
+        "fps": { "type": "number" },
+        "width": { "type": "integer" },
+        "height": { "type": "integer" }
+      }
+    },
+    "validation_results": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "rights_manifest_reference": { "type": ["string", "null"] },
+    "software_version": { "type": ["string", "null"] },
+    "note": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

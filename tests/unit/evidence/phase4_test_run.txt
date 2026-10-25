@@ -1,0 +1,50 @@
+Phase 4 — Complete Test Suite Run
+===================================
+Date: 2026-10-19
+Python: 3.14.2
+Platform: win32
+
+Command:
+  python run_phase4.py
+  (STOCK_PROVIDER=mock, GENERATED_PROVIDER=none, EMBEDDING_MODEL=mock,
+   SKIP_STARTUP_CHECKS=true, DATABASE_URL=sqlite:///, LLM_ADAPTER=none)
+
+Results:
+  378 tests collected
+  378 passed
+  0 failed
+  0 errors
+  Duration: 4.85s
+  Exit code: 0
+
+Test breakdown:
+  Phase 2 baseline (129 tests):    129 PASS
+  Phase 3A audio pipeline (90 tests): 90 PASS
+  Phase 3B planner+timeline (88 tests): 88 PASS
+  Phase 4 retrieval+rights (71 tests): 71 PASS
+
+Phase 4 new test file: tests/unit/test_retrieval.py — 71 tests
+
+Hard cases newly covered in Phase 4:
+  HC-14  Stock provider unavailable (timeout)         → empty result; no crash   PASS
+  HC-14  Stock provider HTTP error                    → fallback to next provider PASS
+  HC-15  Generated provider unavailable               → card fallback             PASS
+  HC-16  Both providers unavailable (no generated)    → card fallback             PASS
+  HC-17  Duplicate asset detected in scene            → duplicate_penalty applied PASS
+  HC-24  Missing/invalid licence (require_verified)   → LicenceVerificationError  PASS
+  HC-24  Non-commercial asset                         → always raises             PASS
+  HC-24  Unknown commercial eligibility (strict mode) → raises                    PASS
+
+Integration status:
+  - All retrieval tests run with MOCK adapters (no real API keys)
+  - Pexels adapter: feature-flagged; falls back to mock when PEXELS_API_KEY unset
+  - Pixabay adapter: feature-flagged; falls back to mock when PIXABAY_API_KEY unset
+  - Generated provider: NOT genuinely implemented — mock only
+    (No production generative video provider is integrated; this is documented)
+  - Sentence-transformers embedding: available when installed; mock used in tests
+
+Bugs fixed during Phase 4:
+  1. test_empty_search_queries_returns_empty: helper _scene() used 'or' default
+     for empty list — replaced with explicit None sentinel check.
+
+No failures remain. All 378 tests pass.
