@@ -60,6 +60,10 @@ class PipelineOrchestrator:
 
     def _fail(self, error_code: str, message: str, retryable: bool = True) -> None:
         with get_session() as session:
+            job = repo.get_job(session, self.job_id)
+            if job and job.status == JobStatus.FAILED.value and job.error_code == "RENDER_FAILED" and error_code == "PIPELINE_ERROR":
+                log.info("job_already_marked_failed_preserving_code", job_id=str(self.job_id), code=job.error_code)
+                return
             repo.update_job_status(
                 session,
                 self.job_id,
@@ -854,6 +858,15 @@ class PipelineOrchestrator:
                         retryable=True,
                     )
                     raise
+                except Exception as exc:
+                    log.error("stage_render_unhandled_failed", job_id=jid, error=str(exc))
+                    self._stage_render_metadata["render_error"] = str(exc)
+                    self._fail(
+                        "RENDER_FAILED",
+                        f"Video rendering failed: {exc}",
+                        retryable=True,
+                    )
+                    raise
             else:
                 # FFmpeg not available locally — write placeholder
                 mp4_bytes = self._placeholder_mp4_bytes()
@@ -1334,9 +1347,13 @@ class PipelineOrchestrator:
             # Controlled early exit (e.g. EMPTY_SCRIPT already marked FAILED)
             return
         except Exception as exc:
+            with get_session() as session:
+                curr_job = repo.get_job(session, self.job_id)
+                curr_status = curr_job.status if curr_job else None
+            err_code = "RENDER_FAILED" if curr_status == JobStatus.RENDERING.value else "PIPELINE_ERROR"
             self._fail(
-                "PIPELINE_ERROR",
-                f"Pipeline failed at an unhandled stage: {exc}",
+                err_code,
+                f"Pipeline failed at {curr_status or 'unhandled'} stage: {exc}",
                 retryable=True,
             )
             raise

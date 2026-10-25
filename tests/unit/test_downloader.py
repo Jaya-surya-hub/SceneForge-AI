@@ -162,3 +162,83 @@ class TestMediaDownloader:
         result = downloader.download_and_validate(asset, job_id="storage-fail-job")
         assert result.asset_id == asset.asset_id
         assert os.path.isfile(result.local_path)
+
+    def test_mock_motion_configurable_timeout(self, tmp_path):
+        """Downloader respects MOCK_MOTION_TIMEOUT env var and constructor param."""
+        with patch.dict(os.environ, {"MOCK_MOTION_TIMEOUT": "110"}):
+            import importlib
+            import sceneforge.retrieval.downloader as dl_module
+            importlib.reload(dl_module)
+            try:
+                dl = dl_module.MediaDownloader()
+                assert dl._mock_motion_timeout == 110
+
+                dl_custom = dl_module.MediaDownloader(mock_motion_timeout=125)
+                assert dl_custom._mock_motion_timeout == 125
+            finally:
+                # restore default
+                os.environ.pop("MOCK_MOTION_TIMEOUT", None)
+                importlib.reload(dl_module)
+
+    def test_mock_motion_timeout_triggers_fallback_and_cleans_up_partial_file(self, tmp_path):
+        """When primary FFmpeg generation times out, partial files are removed and fallback clip is used."""
+        import subprocess
+        mock_storage = MagicMock()
+        downloader = MediaDownloader(
+            storage_client=mock_storage,
+            work_dir=str(tmp_path),
+            mock_motion_timeout=90,
+        )
+        asset = _make_mock_asset(asset_id="mock-timeout-001")
+
+        # Simulate timeout on the first subprocess.run (primary motion generation),
+        # but let fallback generator succeed with a valid mock clip.
+        timeout_err = subprocess.TimeoutExpired(
+            cmd=["ffmpeg", "mock"],
+            timeout=90,
+            stderr="frame=12 fps=2 q=28.0 size=256kB time=00:00:00.80 bitrate=2621.4kbits/s",
+        )
+
+        def mock_generate_fallback(target_path, width, height, duration):
+            # Write a valid dummy file > 1024 bytes representing fallback clip
+            with open(target_path, "wb") as f:
+                f.write(b"\x00" * 2048)
+            return True
+
+        with patch("sceneforge.retrieval.downloader.is_ffmpeg_available", return_value=True), \
+             patch("subprocess.run", side_effect=timeout_err), \
+             patch.object(downloader, "_generate_fallback_clip", side_effect=mock_generate_fallback) as mock_fb, \
+             patch("sceneforge.retrieval.downloader.is_ffprobe_available", return_value=False):
+            result = downloader.download_and_validate(asset, target_duration=5.0, job_id="timeout-job")
+
+        assert mock_fb.called
+        assert result.asset_id == "mock-timeout-001"
+        assert os.path.isfile(result.local_path)
+        assert os.path.getsize(result.local_path) == 2048
+
+    def test_mock_motion_double_failure_raises_media_download_error_no_corrupt_file(self, tmp_path):
+        """When both primary FFmpeg generation and fallback fail, raises MediaDownloadError without leaving partial/corrupt file."""
+        import subprocess
+        mock_storage = MagicMock()
+        downloader = MediaDownloader(
+            storage_client=mock_storage,
+            work_dir=str(tmp_path),
+            mock_motion_timeout=90,
+        )
+        asset = _make_mock_asset(asset_id="mock-fail-002")
+
+        timeout_err = subprocess.TimeoutExpired(
+            cmd=["ffmpeg", "mock"],
+            timeout=90,
+            stderr="Timed out generating 1080p stream",
+        )
+
+        with patch("sceneforge.retrieval.downloader.is_ffmpeg_available", return_value=True), \
+             patch("subprocess.run", side_effect=timeout_err), \
+             patch.object(downloader, "_generate_fallback_clip", return_value=False):
+            with pytest.raises(MediaDownloadError, match="FFmpeg generation and fallback both failed"):
+                downloader.download_and_validate(asset, target_duration=5.0, job_id="double-fail-job")
+
+        # Verify no corrupt file was left at the destination
+        expected_dest = os.path.join(str(tmp_path), "asset_mock-fail-002.mp4")
+        assert not os.path.exists(expected_dest)

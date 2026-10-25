@@ -153,3 +153,47 @@ class TestReconciliationAndStorage:
         filenames = [k.split("/")[-1] for k in keys]
         assert "output.mp4" in filenames
         assert "captions.srt" in filenames
+
+    def test_ffmpeg_timeout_during_render_transitions_to_failed_with_informative_error(self, db_session):
+        """When FFmpeg times out during render, orchestrator transitions job to FAILED (RENDER_FAILED) with informative timeout message."""
+        job = _make_job(db_session, status=JobStatus.RETRIEVING.value, script="A short scene to render.")
+        orchestrator = PipelineOrchestrator(job.id)
+
+        with patch("sceneforge.jobs.orchestrator.get_session") as mock_sess:
+            ctx = MagicMock()
+            ctx.__enter__ = MagicMock(return_value=db_session)
+            ctx.__exit__ = MagicMock(return_value=False)
+            mock_sess.return_value = ctx
+
+            with patch("sceneforge.rendering.ffprobe.is_ffmpeg_available", return_value=True), \
+                 patch("sceneforge.rendering.renderer.VideoRenderer.render", side_effect=RenderError("FFmpeg timed out after 120s during 'render_video_scene_1'. Stderr: frame=15 fps=0.5")):
+                with pytest.raises(RenderError):
+                    orchestrator._stage_render()
+
+        db_session.expire_all()
+        updated = repo.get_job(db_session, job.id)
+        assert updated.status == JobStatus.FAILED.value
+        assert updated.error_code == "RENDER_FAILED"
+        assert "FFmpeg timed out after 120s" in updated.error_message
+
+    def test_unhandled_rendering_exception_transitions_to_failed_with_render_failed(self, db_session):
+        """When an unhandled exception occurs in rendering stage, orchestrator marks job FAILED (RENDER_FAILED)."""
+        job = _make_job(db_session, status=JobStatus.RETRIEVING.value, script="A short scene to render.")
+        orchestrator = PipelineOrchestrator(job.id)
+
+        with patch("sceneforge.jobs.orchestrator.get_session") as mock_sess:
+            ctx = MagicMock()
+            ctx.__enter__ = MagicMock(return_value=db_session)
+            ctx.__exit__ = MagicMock(return_value=False)
+            mock_sess.return_value = ctx
+
+            with patch("sceneforge.rendering.ffprobe.is_ffmpeg_available", return_value=True), \
+                 patch("sceneforge.rendering.renderer.VideoRenderer.render", side_effect=RuntimeError("Subprocess segmentation fault")):
+                with pytest.raises(RuntimeError):
+                    orchestrator._stage_render()
+
+        db_session.expire_all()
+        updated = repo.get_job(db_session, job.id)
+        assert updated.status == JobStatus.FAILED.value
+        assert updated.error_code == "RENDER_FAILED"
+        assert "Subprocess segmentation fault" in updated.error_message

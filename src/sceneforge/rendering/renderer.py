@@ -44,6 +44,7 @@ log = get_logger(__name__)
 _FFMPEG_BIN = os.getenv("FFMPEG_BIN", "ffmpeg")
 _FFMPEG_TIMEOUT = int(os.getenv("FFMPEG_TIMEOUT", "300"))
 _SEGMENT_TIMEOUT = int(os.getenv("FFMPEG_SEGMENT_TIMEOUT", "120"))
+_FFMPEG_THREADS = os.getenv("FFMPEG_THREADS", "1")
 
 
 @dataclass
@@ -322,6 +323,7 @@ class VideoRenderer:
             args = [
                 _FFMPEG_BIN,
                 "-y",
+                "-threads", _FFMPEG_THREADS,
                 "-stream_loop", "-1",
                 "-i", local_path,
                 "-f", "lavfi",
@@ -367,10 +369,11 @@ class VideoRenderer:
         """Create a black silent segment as a last-resort fallback."""
         args = [
             _FFMPEG_BIN, "-y",
+            "-threads", _FFMPEG_THREADS,
             "-f", "lavfi", "-i", f"color=c=black:s={self._profile.width}x{self._profile.height}:r={self._profile.fps}",
             "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
             "-t", str(duration),
-            "-c:v", "libx264", "-preset", "fast", "-crf", "28",
+            "-c:v", "libx264", "-preset", self._profile.preset, "-crf", "28",
             "-c:a", "aac", "-b:a", "128k", "-pix_fmt", "yuv420p", "-shortest",
             output_path,
         ]
@@ -381,9 +384,30 @@ class VideoRenderer:
     # ------------------------------------------------------------------
 
     def _ffmpeg_concat(self, concat_list: str, output: str) -> None:
-        """Concatenate segments using the concat demuxer."""
-        args = [
+        """Concatenate segments using the concat demuxer.
+        
+        Attempts fast stream copy first since all segments are normalised
+        to the identical codec, resolution, and fps. Falls back to re-encode
+        if demux copy fails.
+        """
+        copy_args = [
             _FFMPEG_BIN, "-y",
+            "-f", "concat", "-safe", "0",
+            "-i", concat_list,
+            "-c:v", "copy",
+            "-c:a", "copy",
+            "-movflags", "+faststart",
+            output,
+        ]
+        try:
+            self._run_ffmpeg(copy_args, _FFMPEG_TIMEOUT, context="concat_copy")
+            return
+        except RenderError as copy_err:
+            log.warning("concat_stream_copy_failed_falling_back_to_encode", error=str(copy_err))
+
+        reencode_args = [
+            _FFMPEG_BIN, "-y",
+            "-threads", _FFMPEG_THREADS,
             "-f", "concat", "-safe", "0",
             "-i", concat_list,
             "-c:v", self._profile.video_codec,
@@ -394,7 +418,7 @@ class VideoRenderer:
             "-movflags", "+faststart",
             output,
         ]
-        self._run_ffmpeg(args, _FFMPEG_TIMEOUT, context="concat")
+        self._run_ffmpeg(reencode_args, _FFMPEG_TIMEOUT, context="concat_reencode")
 
     def _ffmpeg_mix_audio(self, video_path: str, output: str) -> None:
         """Mix narration audio into the video, or copy if no audio provided."""
@@ -454,6 +478,7 @@ class VideoRenderer:
         vf = f"subtitles='{safe_srt}':force_style='{style}'"
         args = [
             _FFMPEG_BIN, "-y",
+            "-threads", _FFMPEG_THREADS,
             "-i", video_path,
             "-vf", vf,
             "-c:v", self._profile.video_codec,
@@ -471,6 +496,7 @@ class VideoRenderer:
             simple_vf = f"subtitles='{safe_srt}'"
             simple_args = [
                 _FFMPEG_BIN, "-y",
+                "-threads", _FFMPEG_THREADS,
                 "-i", video_path,
                 "-vf", simple_vf,
                 "-c:v", self._profile.video_codec,
@@ -499,9 +525,13 @@ class VideoRenderer:
                 "FFmpeg must be installed for rendering. "
                 "In Docker: use the provided Dockerfile which installs FFmpeg."
             )
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as exc:
+            stderr_output = getattr(exc, "stderr", None) or ""
+            if isinstance(stderr_output, bytes):
+                stderr_output = stderr_output.decode(errors="replace")
+            stderr_snippet = stderr_output[-600:]
             raise RenderError(
-                f"FFmpeg timed out after {timeout}s during '{context}'."
+                f"FFmpeg timed out after {timeout}s during '{context}'. {stderr_snippet}".strip()
             )
         if result.returncode != 0:
             raise RenderError(
